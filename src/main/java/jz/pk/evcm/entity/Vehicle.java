@@ -24,7 +24,7 @@ public class Vehicle {
     private String model;
     private Year yearOfProduction;
 
-    private
-
+    private ConnectorType connector;
+    private boolean isConnectorModified;
 
 }

@@ -1,5 +1,6 @@
 package jz.pk.evcm.entity;
 
-public enum ConnectionType {
+public enum ConnectorType {
     // TODO: Add all reference connection types
+    UNKNOWN
 }
