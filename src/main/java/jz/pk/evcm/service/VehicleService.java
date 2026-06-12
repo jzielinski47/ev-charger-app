@@ -9,12 +9,12 @@ public interface VehicleService {
 
     List<VehicleDTO> getAllVehicles();
 
-    Vehicle getVehicleById(Long id);
+    VehicleDTO getVehicleById(Long id);
 
-    Vehicle addVehicle();
+    VehicleDTO addVehicle();
 
-    Vehicle modifyVehicle();
+    VehicleDTO modifyVehicle();
 
-    Vehicle removeVehicle();
+    VehicleDTO removeVehicle();
 
 }
