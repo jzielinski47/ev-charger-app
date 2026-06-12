@@ -18,4 +18,6 @@ public class Vehicle {
     private String model;
     private Year yearOfProduction;
 
+
+
 }
