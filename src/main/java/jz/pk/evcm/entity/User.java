@@ -1,12 +1,13 @@
 package jz.pk.evcm.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -23,5 +24,14 @@ public class User {
     private String password;
     private UserRole role;
 
+    @OneToMany(mappedBy = "owner")
+    private Set<Vehicle> userVehicles = new HashSet<>();
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "selected_vehicle_id")
+    private Vehicle selectedVehicle;
+
+    public Optional<Vehicle> getSelectedVehicle() {
+        return Optional.ofNullable(selectedVehicle);
+    }
 }
