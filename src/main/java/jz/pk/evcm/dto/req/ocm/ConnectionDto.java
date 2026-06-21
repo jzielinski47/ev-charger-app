@@ -1,14 +1,14 @@
 package jz.pk.evcm.dto.req.ocm;
 
-import jz.pk.evcm.entity.PowerSupplyType;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record ConnectionDto(
-        Long id,
-        ConnectionTypeDto connectionType,
-        Integer amps,
-        Integer voltage,
-        Double powerKW,
-        PowerSupplyType powerSupplyType,
-        Integer quantity
+        @JsonProperty("ID") Long id,
+        @JsonProperty("ConnectionType") ConnectionTypeDto connectionType,
+        @JsonProperty("Amps") Integer amps,
+        @JsonProperty("Voltage") Integer voltage,
+        @JsonProperty("PowerKW") Double powerKW,
+        @JsonProperty("CurrentTypeID") Integer currentTypeId,
+        @JsonProperty("Quantity") Integer quantity
 ) {
 }
