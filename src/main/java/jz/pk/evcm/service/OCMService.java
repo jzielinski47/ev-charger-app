@@ -61,7 +61,7 @@ public class OCMService {
                         .queryParam("output", "json")
                         .queryParam("countrycode", "US")
                         .queryParam("maxresults", "10")
-                        .queryParam("camelcase", "true")
+//                        .queryParam("camelcase", "true")
                         .build())
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<ChargerPointDto>>() {

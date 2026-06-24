@@ -19,8 +19,8 @@ public class ChargerPointControlller {
     }
 
     @GetMapping("/")
-    public ResponseEntity<String> test() {
-        String req = String.valueOf(openChargerAPI.ocmTestEndpoint());
+    public ResponseEntity<List<ChargerPointDto>> test() {
+        List<ChargerPointDto> req = openChargerAPI.ocmTestEndpoint();
         System.out.println(req);
         return new ResponseEntity<>(req, HttpStatus.FOUND);
 
