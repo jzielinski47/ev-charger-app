@@ -26,11 +26,6 @@ public class OpenChargeApiService implements OpenChargeApiContract {
     }
 
     @Override
-    public List<ChargerPointDto> fetchAllChargersInProximity(Double latitude, Double longitude, Double distanceInKm) {
-        return this.fetchAllChargersInProximity(latitude, longitude, distanceInKm, 100);
-    }
-
-    @Override
     public List<ChargerPointDto> fetchAllChargersInProximity(Double latitude, Double longitude, Double distanceInKm, Integer maxResults) {
         return restClient.get()
                 .uri(uriBuilder -> uriBuilder
