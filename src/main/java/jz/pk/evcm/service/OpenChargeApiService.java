@@ -14,18 +14,18 @@ import java.util.List;
  */
 
 @Service
-public class OCMService {
+public class OpenChargeApiService implements OpenChargeApiContract {
     private final String apiBaseUrl = "https://api.openchargemap.io/v3";
     RestClient restClient;
 
-    public OCMService(@Value("${opencharge.api.key}") String apiKey) {
+    public OpenChargeApiService(@Value("${opencharge.api.key}") String apiKey) {
         this.restClient = RestClient.builder()
                 .baseUrl(apiBaseUrl)
                 .defaultHeader("X-API-Key", apiKey)
                 .build();
     }
 
-
+    @Override
     public List<ChargerPointDto> fetchAllChargersInProximity(Double latitude, Double longitude, Double distanceInKm) {
         return restClient.get()
                 .uri(uriBuilder -> uriBuilder
@@ -36,10 +36,28 @@ public class OCMService {
                         .queryParam("distance", distanceInKm)
                         .queryParam("distanceunit", "km")
                         .queryParam("camelcase", "true")
+                        .queryParam("maxresults", 100)
                         .build())
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<ChargerPointDto>>() {
                 });
     }
 
+    @Override
+    public List<ChargerPointDto> fetchAllChargersInProximity(Double latitude, Double longitude, Double distanceInKm, Integer maxResults) {
+        return restClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/poi")
+                        .queryParam("output", "json")
+                        .queryParam("latitude", latitude)
+                        .queryParam("longitude", longitude)
+                        .queryParam("distance", distanceInKm)
+                        .queryParam("distanceunit", "km")
+                        .queryParam("camelcase", "true")
+                        .queryParam("maxresults", 100)
+                        .build())
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<ChargerPointDto>>() {
+                });
+    }
 }
