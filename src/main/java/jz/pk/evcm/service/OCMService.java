@@ -22,30 +22,18 @@ public class OCMService {
         this.restClient = RestClient.builder()
                 .baseUrl(apiBaseUrl)
                 .defaultHeader("X-API-Key", apiKey)
-//                .defaultHeader("Accept", "application/json")
                 .build();
     }
 
-    public String test() {
-        String req =
-                String.valueOf(restClient.get()
-                        .uri(uriBuilder -> uriBuilder.path("/poi").queryParam("output",
-                                "json").queryParam("countrycode", "US").queryParam("maxresults", 10).build())
-                        .retrieve()
-                        .body(String.class));
 
-        // call https://api.openchargemap.io/v3/poi/?output=json&countrycode=US&maxresults=10
-        return req;
-    }
-
-    public List<ChargerPointDto> getAllChargerPointsAround(Double latitude, Double longitude) {
+    public List<ChargerPointDto> fetchAllChargersInProximity(Double latitude, Double longitude, Double distanceInKm) {
         return restClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/poi")
                         .queryParam("output", "json")
                         .queryParam("latitude", latitude)
                         .queryParam("longitude", longitude)
-                        .queryParam("distance", 10) // Example: 10km radius
+                        .queryParam("distance", distanceInKm)
                         .queryParam("distanceunit", "km")
                         .queryParam("camelcase", "true")
                         .build())
@@ -54,17 +42,4 @@ public class OCMService {
                 });
     }
 
-    public List<ChargerPointDto> ocmTestEndpoint() {
-        return restClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/poi")
-                        .queryParam("output", "json")
-                        .queryParam("countrycode", "US")
-                        .queryParam("maxresults", "10")
-//                        .queryParam("camelcase", "true")
-                        .build())
-                .retrieve()
-                .body(new ParameterizedTypeReference<List<ChargerPointDto>>() {
-                });
-    }
 }
