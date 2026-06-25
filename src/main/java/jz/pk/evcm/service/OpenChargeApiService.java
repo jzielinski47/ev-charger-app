@@ -27,20 +27,7 @@ public class OpenChargeApiService implements OpenChargeApiContract {
 
     @Override
     public List<ChargerPointDto> fetchAllChargersInProximity(Double latitude, Double longitude, Double distanceInKm) {
-        return restClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/poi")
-                        .queryParam("output", "json")
-                        .queryParam("latitude", latitude)
-                        .queryParam("longitude", longitude)
-                        .queryParam("distance", distanceInKm)
-                        .queryParam("distanceunit", "km")
-                        .queryParam("camelcase", "true")
-                        .queryParam("maxresults", 100)
-                        .build())
-                .retrieve()
-                .body(new ParameterizedTypeReference<List<ChargerPointDto>>() {
-                });
+        return this.fetchAllChargersInProximity(latitude, longitude, distanceInKm, 100);
     }
 
     @Override
@@ -54,7 +41,7 @@ public class OpenChargeApiService implements OpenChargeApiContract {
                         .queryParam("distance", distanceInKm)
                         .queryParam("distanceunit", "km")
                         .queryParam("camelcase", "true")
-                        .queryParam("maxresults", 100)
+                        .queryParam("maxresults", maxResults)
                         .build())
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<ChargerPointDto>>() {

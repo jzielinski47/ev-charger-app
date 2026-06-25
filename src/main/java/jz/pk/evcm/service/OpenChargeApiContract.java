@@ -6,6 +6,6 @@ import java.util.List;
 
 public interface OpenChargeApiContract {
 
-    public List<ChargerPointDto> fetchAllChargersInProximity(Double latitude, Double longitude, Double distanceInKm);
-    public List<ChargerPointDto> fetchAllChargersInProximity(Double latitude, Double longitude, Double distanceInKm, Integer maxResults);
+    List<ChargerPointDto> fetchAllChargersInProximity(Double latitude, Double longitude, Double distanceInKm);
+    List<ChargerPointDto> fetchAllChargersInProximity(Double latitude, Double longitude, Double distanceInKm, Integer maxResults);
 }
