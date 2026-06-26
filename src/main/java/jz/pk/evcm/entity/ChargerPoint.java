@@ -1,14 +1,24 @@
 package jz.pk.evcm.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.Getter;
+
+import java.util.List;
 
 @Entity
+@Data
 public class ChargerPoint {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    Long id;
+    private Long id;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "address_info_id")
+    private AddressInfo addressInfo;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "charger_point_id")
+    private List<Connection> connections;
+
 }
