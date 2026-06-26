@@ -15,8 +15,8 @@ public class Connection {
     private Integer currentTypeId;
     private Integer quantity;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "connection_type")
+    @ManyToOne
+    @JoinColumn(name = "connection_type_id")
     private ConnectionType connectionType;
 
 

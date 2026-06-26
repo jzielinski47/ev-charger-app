@@ -28,4 +28,12 @@ public class ChargerPointControlller {
 
     }
 
+    @GetMapping("/save")
+    public ResponseEntity<List<ChargerPointDto>> fetchAllChargersInProximityAndSave() {
+        List<ChargerPointDto> req = openChargerAPI.fetchChargersAndSave(50.0,20.0,10., 100);
+        System.out.println("Fetched " + req.size() + " chargers from OpenCharge API");
+        return new ResponseEntity<>(req, HttpStatus.FOUND);
+
+    }
+
 }
