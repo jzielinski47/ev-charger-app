@@ -51,14 +51,17 @@ public class OpenChargeApiService implements OpenChargeApiContract {
     }
 
     public List<ChargerPointDto> fetchChargersAndSave(Double latitude, Double longitude, Double distanceInKm, Integer maxResults) {
-        List<ChargerPointDto> chargers = this.fetchAllChargersInProximity(latitude, longitude, distanceInKm,
+        List<ChargerPointDto> fetchedChargers = this.fetchAllChargersInProximity(latitude, longitude, distanceInKm,
                 maxResults);
 
+        if (fetchedChargers != null && !fetchedChargers.isEmpty()) {
+            List<ChargerPoint> chargerEntities = fetchedChargers.stream()
+                    .map(this::mapToEntity).toList();
 
+            chargerPointRepository.saveAll(chargerEntities);
+        }
 
-//        chargerPointRepository.saveAll(chargers);
-
-        return chargers;
+        return fetchedChargers;
     }
 
     // TEMPORARY UNTIL I FIND A BETTER SOLUTION
