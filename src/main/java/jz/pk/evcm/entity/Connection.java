@@ -1,7 +1,6 @@
 package jz.pk.evcm.entity;
 
 import jakarta.persistence.*;
-import jz.pk.evcm.dto.req.ocm.ConnectionType;
 import lombok.Data;
 
 @Entity
