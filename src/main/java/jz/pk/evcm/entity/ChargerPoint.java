@@ -17,7 +17,7 @@ public class ChargerPoint {
     @JoinColumn(name = "address_info_id")
     private AddressInfo addressInfo;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "charger_point_id")
     private List<Connection> connections;
 
