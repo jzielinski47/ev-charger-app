@@ -16,7 +16,7 @@ import java.util.*;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name="users")
+@Table(name = "users")
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,6 +32,7 @@ public class User implements UserDetails {
 
     @Column(nullable = false)
     private String password;
+    private Boolean isNonLocked = false;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
@@ -56,6 +57,7 @@ public class User implements UserDetails {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "selected_vehicle_id")
     private Vehicle selectedVehicle;
+
 
     public Optional<Vehicle> getSelectedVehicle() {
         return Optional.ofNullable(selectedVehicle);
@@ -84,7 +86,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return isNonLocked;
     }
 
     @Override
