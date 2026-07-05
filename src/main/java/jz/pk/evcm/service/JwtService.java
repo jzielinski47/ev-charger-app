@@ -2,23 +2,23 @@
  * following service was implemented with docs ref. https://github.com/jwtk/jjwt
  * */
 
-
 package jz.pk.evcm.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import jz.pk.evcm.entity.UserRole;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -36,10 +36,10 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    public String generateToken(String email, Set<UserRole> roles) {
+    public String generateToken(UserDetails userDetails) {
         return Jwts.builder()
-                .claim("roles", wrapAuthorities(roles))
-                .subject(email)
+                .claim("roles", wrapAuthorities(userDetails.getAuthorities()))
+                .subject(userDetails.getUsername())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(getSigningKey())
@@ -51,12 +51,12 @@ public class JwtService {
     }
 
     @SuppressWarnings("unchecked")
-    public List<UserRole> extractRoles(String token) {
+    public List<GrantedAuthority> extractAuthorities(String token) {
         List<String> rolesList = extractClaim(token, claims -> claims.get("roles", List.class));
-        if(rolesList == null)
+        if (rolesList == null)
             return Collections.emptyList();
         return rolesList.stream()
-                .map(UserRole::valueOf)
+                .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
     }
 
@@ -85,8 +85,10 @@ public class JwtService {
         return extractExpiration(token).before(new Date());
     }
 
-    private List<String> wrapAuthorities(Set<UserRole> roles) {
-        return roles.stream().map(Enum::name).collect(Collectors.toList());
+    private List<String> wrapAuthorities(Collection<? extends GrantedAuthority> authorities) {
+        return authorities.stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
     }
 
     private SecretKey getSigningKey() {
