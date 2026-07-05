@@ -2,7 +2,7 @@
  * following service was implemented with docs ref. https://github.com/jwtk/jjwt
  * */
 
-package jz.pk.evcm.service;
+package jz.pk.evcm.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -53,8 +53,10 @@ public class JwtService {
     @SuppressWarnings("unchecked")
     public List<GrantedAuthority> extractAuthorities(String token) {
         List<String> rolesList = extractClaim(token, claims -> claims.get("roles", List.class));
+
         if (rolesList == null)
             return Collections.emptyList();
+
         return rolesList.stream()
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
@@ -68,9 +70,33 @@ public class JwtService {
         return jwtExpirationMs;
     }
 
+    /**
+     * STATEFUL VALIDATION
+     * Checks if the token is unexpired AND the subject matches the current database record.
+     * Use this when you want immediate control to revoke access if a user is deleted/banned.
+     *
+     * @param token the JWT extracted from the request
+     * @param userDetails the latest user record loaded from the database
+     * @return true if the token is valid and belongs to the user, false otherwise
+     */
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String email = extractEmail(token);
         return (email.equals(userDetails.getUsername())) && !isTokenExpired(token);
+    }
+
+    /**
+     * STATELESS VALIDATION
+     * Checks if the token is unexpired.
+     *
+     * Note: Cryptographic signature validation happens implicitly inside the
+     * JWT parsing process (e.g., inside isTokenExpired). The library will throw a
+     * SignatureException before this method even returns if the token was tampered with.
+     *
+     * @param token the JWT extracted from the request
+     * @return true if the token is unexpired and mathematically valid
+     */
+    public boolean isTokenValid(String token) {
+        return !isTokenExpired(token);
     }
 
     private Claims extractAllClaims(String token) {
