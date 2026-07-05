@@ -68,13 +68,11 @@ public class OpenChargeApiService implements OpenChargeApiContract {
                     .map(chargerMapper::toEntity)
                     .toList();
 
-            // 1. Extract and deduplicate ConnectionTypes
             List<ConnectionType> uniqueTypes = chargerEntities.stream()
                     .flatMap(charger -> charger.getConnections().stream())
                     .map(Connection::getConnectionType)
                     .filter(java.util.Objects::nonNull)
-                    // This collects them into a Map using the ID as the key,
-                    // automatically removing duplicates, then grabs the values.
+
                     .collect(java.util.stream.Collectors.toMap(
                             ConnectionType::getId,
                             type -> type,
@@ -82,11 +80,8 @@ public class OpenChargeApiService implements OpenChargeApiContract {
                     ))
                     .values().stream().toList();
 
-            // 2. Save the unique types to the DB first
-            // You will need to create a ConnectionTypeRepository for this
-            connectionTypeRepository.saveAll(uniqueTypes);
 
-            // 3. Now save the chargers
+            connectionTypeRepository.saveAll(uniqueTypes);
             chargerPointRepository.saveAll(chargerEntities);
         }
 
