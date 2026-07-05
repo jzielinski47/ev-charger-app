@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -37,22 +38,23 @@ public class JwtService {
 
     public String generateToken(String email, Set<UserRole> roles) {
         return Jwts.builder()
-                .claim("role", wrapAuthorites(roles))
+                .claim("roles", wrapAuthorities(roles))
                 .subject(email)
-                .claims()
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .and().signWith(getSigningKey())
+                .signWith(getSigningKey())
                 .compact();
     }
 
     public String extractEmail(String token) {
-        return null;
+        return extractClaim(token, Claims::getSubject);
     }
 
     @SuppressWarnings("unchecked")
     public List<UserRole> extractRoles(String token) {
         List<String> rolesList = extractClaim(token, claims -> claims.get("roles", List.class));
+        if(rolesList == null)
+            return Collections.emptyList();
         return rolesList.stream()
                 .map(UserRole::valueOf)
                 .collect(Collectors.toList());
@@ -71,20 +73,20 @@ public class JwtService {
         return (email.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
 
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    private List<String> wrapAuthorites(Set<UserRole> roles) {
-        return roles.stream().map(Enum::name).collect(Collectors.toList());
-    }
-
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+    private List<String> wrapAuthorities(Set<UserRole> roles) {
+        return roles.stream().map(Enum::name).collect(Collectors.toList());
     }
 
     private SecretKey getSigningKey() {
