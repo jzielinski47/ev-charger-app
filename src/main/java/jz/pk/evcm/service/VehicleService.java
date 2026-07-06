@@ -6,6 +6,7 @@ import jz.pk.evcm.dto.res.ResVehicleDto;
 import jz.pk.evcm.entity.ConnectorType;
 import jz.pk.evcm.entity.User;
 import jz.pk.evcm.entity.Vehicle;
+import jz.pk.evcm.repository.UserRepository;
 import jz.pk.evcm.repository.VehicleRepository;
 import org.springframework.stereotype.Service;
 
@@ -15,13 +16,24 @@ import java.util.List;
 public class VehicleService {
 
     private final VehicleRepository vehicleRepository;
+    private final UserRepository userRepository;
 
-    public VehicleService(VehicleRepository vehicleRepository) {
+    public VehicleService(VehicleRepository vehicleRepository, UserRepository userRepository) {
         this.vehicleRepository = vehicleRepository;
+        this.userRepository = userRepository;
     }
 
-    public List<ResVehicleDto> getAllVehicles() {
-        List<Vehicle> vehicles = vehicleRepository.findAll();
+    public List<ResVehicleDto> getAllVehicles(String userEmail, boolean isAdmin, String targetEmail) {
+        List<Vehicle> vehicles;
+
+        if (isAdmin && targetEmail != null && !targetEmail.isBlank()) {
+            vehicles = vehicleRepository.findByOwnerEmail(targetEmail);
+        } else if (isAdmin) {
+            vehicles = vehicleRepository.findAll();
+        } else {
+            vehicles = vehicleRepository.findByOwnerEmail(userEmail);
+        }
+
         return vehicles.stream().map(ResVehicleDto::new).toList();
     }
 
@@ -30,7 +42,10 @@ public class VehicleService {
         return new ResVehicleDto(vehicle);
     }
 
-    public ResVehicleDto addVehicle(User owner, InputVehicleDto dto) {
+    public ResVehicleDto addVehicle(String ownerEmail, InputVehicleDto dto) {
+
+        User owner = userRepository.findByEmail(ownerEmail).orElseThrow(EntityNotFoundException::new);
+
         Vehicle newVehicle = new Vehicle();
         newVehicle.setBrand(dto.brand());
         newVehicle.setModel(dto.model());
@@ -54,5 +69,7 @@ public class VehicleService {
     public boolean setFavouriteVehicle(Long id) {
         return true;
     }
+
+
 
 }
