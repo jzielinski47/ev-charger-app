@@ -81,10 +81,9 @@ public class VehicleService {
         return new VehicleResponse(updatedVehicle);
     }
 
-    public boolean deleteVehicle(Long vehicleId, String userEmail, boolean isAdmin) {
+    public void deleteVehicle(Long vehicleId, String userEmail, boolean isAdmin) {
         Vehicle vehicle = getAccessibleVehicle(vehicleId, userEmail, isAdmin);
         vehicleRepository.delete(vehicle);
-        return true;
     }
 
     private Vehicle getAccessibleVehicle(Long vehicleId, String currentUserEmail, boolean isAdmin) {
