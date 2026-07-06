@@ -1,0 +1,4 @@
+name: EVCM
+values:
+  - key: user_token
+    secret: true

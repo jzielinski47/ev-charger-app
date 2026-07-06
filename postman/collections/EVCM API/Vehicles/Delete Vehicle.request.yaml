@@ -1,0 +1,9 @@
+$kind: http-request
+name: Delete Vehicle
+method: DELETE
+url: '{{baseUrl}}/api/vehicles/{{vehicleId}}'
+pathVariables:
+  - key: vehicleId
+    value: '1'
+    description: ID of the vehicle to delete
+order: 5000

@@ -32,7 +32,7 @@ public class User implements UserDetails {
 
     @Column(nullable = false)
     private String password;
-    private Boolean isNonLocked = false;
+    private Boolean isNonLocked = true;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
@@ -58,9 +58,13 @@ public class User implements UserDetails {
     @JoinColumn(name = "selected_vehicle_id")
     private Vehicle selectedVehicle;
 
-
     public Optional<Vehicle> getSelectedVehicle() {
         return Optional.ofNullable(selectedVehicle);
+    }
+
+    public Set<UserRole> assignRole(UserRole role) {
+        roles.add(role);
+        return roles;
     }
 
     @Override

@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jz.pk.evcm.dto.req.local.LoginUserDto;
 import jz.pk.evcm.dto.req.local.SignupUserDto;
 import jz.pk.evcm.dto.res.LoginResponse;
+import jz.pk.evcm.dto.res.UserResponse;
 import jz.pk.evcm.entity.User;
 import jz.pk.evcm.security.JwtService;
 import jz.pk.evcm.service.AuthService;
@@ -27,7 +28,7 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupUserDto signupUserDto) {
-        User registeredUser = authenticationService.signupUser(signupUserDto);
+        UserResponse registeredUser = authenticationService.signupUser(signupUserDto);
         return ResponseEntity.ok(registeredUser);
     }
 
