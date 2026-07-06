@@ -2,7 +2,7 @@ package jz.pk.evcm.dto.req.local;
 
 import java.time.Year;
 
-public record InputVehicleDto(
+public record VehicleRequest(
         Long id,
         String brand,
         String model,
