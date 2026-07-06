@@ -1,10 +1,7 @@
 package jz.pk.evcm.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import jz.pk.evcm.dto.req.local.InputVehicleDto;
-import jz.pk.evcm.dto.res.ResVehicleDto;
-import jz.pk.evcm.entity.ConnectorType;
-import jz.pk.evcm.entity.User;
+import jz.pk.evcm.dto.res.VehicleResponse;
 import jz.pk.evcm.entity.Vehicle;
 import jz.pk.evcm.repository.UserRepository;
 import jz.pk.evcm.repository.VehicleRepository;
@@ -23,53 +20,35 @@ public class VehicleService {
         this.userRepository = userRepository;
     }
 
-    public List<ResVehicleDto> getAllVehicles(String userEmail, boolean isAdmin, String targetEmail) {
+    public List<VehicleResponse> getAllVehicles(String userEmail, boolean isAdmin, String targetUserEmail) {
         List<Vehicle> vehicles;
 
-        if (isAdmin && targetEmail != null && !targetEmail.isBlank()) {
-            vehicles = vehicleRepository.findByOwnerEmail(targetEmail);
-        } else if (isAdmin) {
-            vehicles = vehicleRepository.findAll();
+        if (isAdmin) {
+            if(targetUserEmail != null && !targetUserEmail.isBlank()) {
+                vehicles = vehicleRepository.findByOwnerEmail(targetUserEmail);
+            } else {
+                vehicles = vehicleRepository.findAll();
+            }
         } else {
             vehicles = vehicleRepository.findByOwnerEmail(userEmail);
         }
 
-        return vehicles.stream().map(ResVehicleDto::new).toList();
+        return vehicles.stream().map(VehicleResponse::new).toList();
     }
 
-    public ResVehicleDto getVehicleById(Long id) {
-        Vehicle vehicle = vehicleRepository.findById(id).orElseThrow(EntityNotFoundException::new);
-        return new ResVehicleDto(vehicle);
+    public VehicleResponse getVehicleById(Long vehicleId, String userEmail, boolean isAdmin, String targetUserEmail) {
+        Vehicle vehicle;
+
+        if(isAdmin) {
+            if(targetUserEmail != null && !targetUserEmail.isBlank()) {
+                vehicle = vehicleRepository.findById(vehicleId).orElseThrow(EntityNotFoundException::new);
+            }
+            vehicle = vehicleRepository.findById(vehicleId).orElseThrow(EntityNotFoundException::new);
+        } else {
+            vehicle = vehicleRepository.findById(vehicleId).orElseThrow(EntityNotFoundException::new);
+        }
+
+        return new VehicleResponse(vehicle);
     }
-
-    public ResVehicleDto addVehicle(String ownerEmail, InputVehicleDto dto) {
-
-        User owner = userRepository.findByEmail(ownerEmail).orElseThrow(EntityNotFoundException::new);
-
-        Vehicle newVehicle = new Vehicle();
-        newVehicle.setBrand(dto.brand());
-        newVehicle.setModel(dto.model());
-        newVehicle.setYearOfProduction(dto.yearOfProduction());
-        newVehicle.setConnector(ConnectorType.valueOf(dto.connector()));
-        newVehicle.setConnectorModified(dto.isConnectorModified());
-        newVehicle.setOwner(owner);
-
-        Vehicle savedVehicle = vehicleRepository.save(newVehicle);
-        return new ResVehicleDto(savedVehicle);
-    }
-
-    public ResVehicleDto modifyVehicle(InputVehicleDto dto) {
-        return null;
-    }
-
-    public ResVehicleDto removeVehicle(Long id) {
-        return null;
-    }
-
-    public boolean setFavouriteVehicle(Long id) {
-        return true;
-    }
-
-
 
 }
