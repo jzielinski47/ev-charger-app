@@ -1,6 +1,6 @@
 package jz.pk.evcm.entity;
 
-public enum VehcileMarket {
+public enum VehicleMarket {
     EUROPE,
     NORTH_AMERICA,
     CHINA,

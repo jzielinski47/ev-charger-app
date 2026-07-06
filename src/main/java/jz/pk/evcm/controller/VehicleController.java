@@ -51,7 +51,7 @@ public class VehicleController {
     }
 
     @DeleteMapping("/{vehicleId}")
-    public boolean deleteVehicle(Authentication auth, @PathVariable Long vehicleId) {
-        return vehicleService.deleteVehicle(vehicleId, auth.getName(), isAdmin(auth));
+    public void deleteVehicle(Authentication auth, @PathVariable Long vehicleId) {
+        vehicleService.deleteVehicle(vehicleId, auth.getName(), isAdmin(auth));
     }
 }

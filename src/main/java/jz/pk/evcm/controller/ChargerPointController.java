@@ -12,11 +12,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/chargers")
-public class ChargerPointControlller {
+public class ChargerPointController {
 
     OpenChargeApiService openChargerAPI;
 
-    public ChargerPointControlller(OpenChargeApiService openChargerAPI) {
+    public ChargerPointController(OpenChargeApiService openChargerAPI) {
         this.openChargerAPI = openChargerAPI;
     }
 

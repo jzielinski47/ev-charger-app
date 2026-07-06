@@ -1,13 +1,15 @@
 package jz.pk.evcm.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.Getter;
+import lombok.*;
 
 import java.util.List;
 
 @Entity
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class ChargerPoint {
 
     @Id
