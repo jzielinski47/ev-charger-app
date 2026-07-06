@@ -24,7 +24,8 @@ public class OpenChargeApiService implements OpenChargeApiContract {
     private final ConnectionTypeRepository connectionTypeRepository;
     private final ChargerPointRepository chargerPointRepository;
     private final ChargerMapper chargerMapper;
-    private final String apiBaseUrl = "https://api.openchargemap.io/v3";
+    @Value("https://api.openchargemap.io/v3")
+    private String apiBaseUrl;
     RestClient restClient;
 
     public OpenChargeApiService(
