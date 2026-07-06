@@ -1,30 +1,36 @@
 package jz.pk.evcm.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import jz.pk.evcm.dto.req.local.InputVehcileDto;
+import jz.pk.evcm.dto.req.local.InputVehicleDto;
 import jz.pk.evcm.dto.res.ResVehicleDto;
 import jz.pk.evcm.entity.ConnectorType;
 import jz.pk.evcm.entity.User;
 import jz.pk.evcm.entity.Vehicle;
 import jz.pk.evcm.repository.VehicleRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class VehicleService {
 
-    private VehicleRepository vehicleRepository;
+    private final VehicleRepository vehicleRepository;
 
-    List<ResVehicleDto> getAllVehicles() {
+    public VehicleService(VehicleRepository vehicleRepository) {
+        this.vehicleRepository = vehicleRepository;
+    }
+
+    public List<ResVehicleDto> getAllVehicles() {
         List<Vehicle> vehicles = vehicleRepository.findAll();
         return vehicles.stream().map(ResVehicleDto::new).toList();
     }
 
-    ResVehicleDto getVehicleById(Long id) {
+    public ResVehicleDto getVehicleById(Long id) {
         Vehicle vehicle = vehicleRepository.findById(id).orElseThrow(EntityNotFoundException::new);
         return new ResVehicleDto(vehicle);
     }
 
-    ResVehicleDto addVehicle(User owner, InputVehcileDto dto) {
+    public ResVehicleDto addVehicle(User owner, InputVehicleDto dto) {
         Vehicle newVehicle = new Vehicle();
         newVehicle.setBrand(dto.brand());
         newVehicle.setModel(dto.model());
@@ -37,15 +43,15 @@ public class VehicleService {
         return new ResVehicleDto(savedVehicle);
     }
 
-    ResVehicleDto modifyVehicle() {
+    public ResVehicleDto modifyVehicle(InputVehicleDto dto) {
         return null;
     }
 
-    ResVehicleDto removeVehicle() {
+    public ResVehicleDto removeVehicle(Long id) {
         return null;
     }
 
-    boolean setFavouriteVehicle(Long id) {
+    public boolean setFavouriteVehicle(Long id) {
         return true;
     }
 
