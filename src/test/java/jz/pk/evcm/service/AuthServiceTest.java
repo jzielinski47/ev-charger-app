@@ -52,6 +52,7 @@ public class AuthServiceTest {
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
         User result = authService.signupUser(dto);
+
         assertNotNull(result);
         assertEquals("test@test.test", result.getEmail());
         assertEquals("hashed", result.getPassword());
