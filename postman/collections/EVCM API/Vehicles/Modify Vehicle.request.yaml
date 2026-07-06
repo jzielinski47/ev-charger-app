@@ -1,0 +1,22 @@
+$kind: http-request
+name: Modify Vehicle
+method: PUT
+url: '{{baseUrl}}/api/vehicles/{{vehicleId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+pathVariables:
+  - key: vehicleId
+    value: '1'
+    description: ID of the vehicle to modify
+body:
+  type: json
+  content: |-
+    {
+      "brand": "Tesla",
+      "model": "Model Y",
+      "yearOfProduction": 2023,
+      "connector": "CCS",
+      "isConnectorModified": false
+    }
+order: 4000

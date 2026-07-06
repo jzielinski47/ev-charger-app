@@ -1,0 +1,9 @@
+$kind: http-request
+name: Get Vehicle by ID
+method: GET
+url: '{{baseUrl}}/api/vehicles/{{vehicleId}}'
+pathVariables:
+  - key: vehicleId
+    value: '1'
+    description: ID of the vehicle to retrieve
+order: 2000

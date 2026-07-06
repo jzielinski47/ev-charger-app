@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Chargers in Proximity
+method: GET
+url: '{{baseUrl}}/api/chargers/poi'
+description: Fetches EV charger points in proximity (hardcoded to lat=50.0, lon=20.0, radius=10km in the service layer).
+order: 1000

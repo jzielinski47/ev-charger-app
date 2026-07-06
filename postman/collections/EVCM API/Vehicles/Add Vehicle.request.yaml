@@ -1,0 +1,23 @@
+$kind: http-request
+name: Add Vehicle
+method: POST
+url: '{{baseUrl}}/api/vehicles'
+headers:
+  - key: Content-Type
+    value: application/json
+queryParams:
+  - key: targetEmail
+    value: ''
+    description: 'Admin only: add vehicle for a specific user by email'
+    disabled: true
+body:
+  type: json
+  content: |-
+    {
+      "brand": "Tesla",
+      "model": "Model 3",
+      "yearOfProduction": 2022,
+      "connector": "CCS",
+      "isConnectorModified": false
+    }
+order: 3000

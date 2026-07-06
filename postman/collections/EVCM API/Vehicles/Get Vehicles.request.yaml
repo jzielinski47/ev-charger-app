@@ -1,0 +1,10 @@
+$kind: http-request
+name: Get Vehicles
+method: GET
+url: '{{baseUrl}}/api/vehicles'
+queryParams:
+  - key: targetEmail
+    value: ''
+    description: 'Admin only: fetch vehicles for a specific user by email'
+    disabled: true
+order: 1000
