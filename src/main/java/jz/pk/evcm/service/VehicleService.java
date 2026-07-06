@@ -1,5 +1,6 @@
 package jz.pk.evcm.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import jz.pk.evcm.dto.res.VehicleDTO;
 import jz.pk.evcm.entity.Vehicle;
 import jz.pk.evcm.repository.VehicleRepository;
@@ -16,7 +17,8 @@ public class VehicleService {
     }
 
     VehicleDTO getVehicleById(Long id) {
-        return null;
+        Vehicle vehicle = vehicleRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        return new VehicleDTO(vehicle);
     }
 
     VehicleDTO addVehicle() {
