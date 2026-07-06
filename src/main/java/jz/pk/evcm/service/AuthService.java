@@ -3,6 +3,7 @@ package jz.pk.evcm.service;
 import jz.pk.evcm.dto.req.local.LoginUserDto;
 import jz.pk.evcm.dto.req.local.SignupUserDto;
 import jz.pk.evcm.entity.User;
+import jz.pk.evcm.entity.UserRole;
 import jz.pk.evcm.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,7 +29,7 @@ public class AuthService {
 
         user.setName(inputDto.name());
         user.setSurname(inputDto.surname());
-
+        user.assignRole(UserRole.USER);
         return userRepository.save(user);
     }
 
