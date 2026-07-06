@@ -59,7 +59,7 @@ public class VehicleService {
         newVehicle.setBrand(dto.brand());
         newVehicle.setModel(dto.model());
         newVehicle.setYearOfProduction(dto.yearOfProduction());
-        newVehicle.setConnector(ConnectorType.valueOf(dto.connector()));
+        newVehicle.setConnector(mapConnectorType(dto.connector()));
         newVehicle.setConnectorModified(dto.isConnectorModified());
         newVehicle.setOwner(owner);
 
@@ -74,7 +74,7 @@ public class VehicleService {
         vehicle.setBrand(dto.brand());
         vehicle.setModel(dto.model());
         vehicle.setYearOfProduction(dto.yearOfProduction());
-        vehicle.setConnector(ConnectorType.valueOf(dto.connector()));
+        vehicle.setConnector(mapConnectorType(dto.connector()));
         vehicle.setConnectorModified(dto.isConnectorModified());
 
         Vehicle updatedVehicle = vehicleRepository.save(vehicle);
@@ -102,6 +102,18 @@ public class VehicleService {
         }
 
         return vehicle;
+    }
+
+    private ConnectorType mapConnectorType(String connector) {
+        if (connector == null) {
+            return ConnectorType.UNKNOWN;
+        }
+
+        try {
+            return ConnectorType.valueOf(connector);
+        } catch (IllegalArgumentException e) {
+            return ConnectorType.UNKNOWN;
+        }
     }
 
 }
