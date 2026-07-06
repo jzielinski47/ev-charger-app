@@ -1,5 +1,6 @@
 package jz.pk.evcm.controller;
 
+import jz.pk.evcm.dto.req.local.VehicleRequest;
 import jz.pk.evcm.dto.res.VehicleResponse;
 import jz.pk.evcm.service.VehicleService;
 import org.springframework.security.core.Authentication;
@@ -28,6 +29,29 @@ public class VehicleController {
         return vehicleService.getAllVehicles(auth.getName(), isAdmin(auth), targetEmail);
     }
 
+    @GetMapping("/{vehicleId}")
+    public VehicleResponse getVehicleById(Authentication auth, @PathVariable Long vehicleId) {
+        return vehicleService.getVehicleById(vehicleId, auth.getName(), isAdmin(auth));
+    }
 
+    @PostMapping
+    public VehicleResponse addVehicle(
+            Authentication auth,
+            @RequestBody VehicleRequest dto,
+            @RequestParam(required = false) String targetEmail) {
+        return vehicleService.addVehicle(dto, auth.getName(), isAdmin(auth), targetEmail);
+    }
 
+    @PutMapping("/{vehicleId}")
+    public VehicleResponse modifyVehicle(
+            Authentication auth,
+            @PathVariable Long vehicleId,
+            @RequestBody VehicleRequest dto) {
+        return vehicleService.modifyVehicle(vehicleId, dto, auth.getName(), isAdmin(auth));
+    }
+
+    @DeleteMapping("/{vehicleId}")
+    public boolean deleteVehicle(Authentication auth, @PathVariable Long vehicleId) {
+        return vehicleService.deleteVehicle(vehicleId, auth.getName(), isAdmin(auth));
+    }
 }
