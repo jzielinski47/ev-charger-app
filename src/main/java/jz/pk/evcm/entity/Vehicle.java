@@ -6,6 +6,7 @@ import lombok.*;
 import java.time.Year;
 
 @Entity
+@Builder
 @Getter
 @Setter
 @NoArgsConstructor
