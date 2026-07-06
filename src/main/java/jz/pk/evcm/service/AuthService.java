@@ -21,26 +21,26 @@ public class AuthService {
         this.authManager = authManager;
     }
 
-    public User signupUser(SignupUserDto input) {
+    public User signupUser(SignupUserDto inputDto) {
         User user = new User();
-        user.setEmail(input.email());
-        user.setPassword(passwordEncoder.encode(input.password()));
+        user.setEmail(inputDto.email());
+        user.setPassword(passwordEncoder.encode(inputDto.password()));
 
-        user.setName(input.name());
-        user.setSurname(input.surname());
+        user.setName(inputDto.name());
+        user.setSurname(inputDto.surname());
 
         return userRepository.save(user);
     }
 
-    public User authenticate(LoginUserDto input) {
+    public User authenticate(LoginUserDto inputDto) {
         authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        input.email(),
-                        input.password()
+                        inputDto.email(),
+                        inputDto.password()
                 )
         );
 
-        return userRepository.findByEmail(input.email())
+        return userRepository.findByEmail(inputDto.email())
                 .orElseThrow();
     }
 }
