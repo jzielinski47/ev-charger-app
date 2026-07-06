@@ -27,7 +27,7 @@ public class VehicleService {
         List<Vehicle> vehicles;
 
         if (isAdmin) {
-            if(targetUserEmail != null && !targetUserEmail.isBlank()) {
+            if (targetUserEmail != null && !targetUserEmail.isBlank()) {
                 vehicles = vehicleRepository.findByOwnerEmail(targetUserEmail);
             } else {
                 vehicles = vehicleRepository.findAll();
@@ -39,13 +39,21 @@ public class VehicleService {
         return vehicles.stream().map(VehicleResponse::new).toList();
     }
 
-    public VehicleResponse getVehicleById(Long vehicleId, String userEmail, boolean isAdmin) {
-        Vehicle vehicle = getAccessibleVehicle(vehicleId, userEmail, isAdmin);
+    public VehicleResponse getVehicleById(Long vehicleId, String currentUserEmail, boolean isAdmin) {
+        Vehicle vehicle = getAccessibleVehicle(vehicleId, currentUserEmail, isAdmin);
         return new VehicleResponse(vehicle);
     }
 
-    public VehicleResponse addVehicle(VehicleRequest dto, String userEmail, boolean isAdmin) {
-        User owner = userRepository.findByEmail(userEmail).orElseThrow(EntityNotFoundException::new);
+    public VehicleResponse addVehicle(
+            VehicleRequest dto,
+            String currentUserEmail,
+            boolean isAdmin,
+            String targetUserEmail) {
+
+        boolean isAdminCreatingOnBehalf = isAdmin && targetUserEmail != null && !targetUserEmail.isBlank();
+        String ownerEmail = isAdminCreatingOnBehalf ? targetUserEmail : currentUserEmail;
+
+        User owner = userRepository.findByEmail(ownerEmail).orElseThrow(EntityNotFoundException::new);
 
         Vehicle newVehicle = new Vehicle();
         newVehicle.setBrand(dto.brand());
@@ -59,9 +67,9 @@ public class VehicleService {
         return new VehicleResponse(savedVehicle);
     }
 
-    public VehicleResponse modifyVehicle(Long vehicleId, VehicleRequest dto, String userEmail, boolean isAdmin) {
+    public VehicleResponse modifyVehicle(Long vehicleId, VehicleRequest dto, String currentUserEmail, boolean isAdmin) {
 
-        Vehicle vehicle = getAccessibleVehicle(vehicleId, userEmail, isAdmin);
+        Vehicle vehicle = getAccessibleVehicle(vehicleId, currentUserEmail, isAdmin);
 
         vehicle.setBrand(dto.brand());
         vehicle.setModel(dto.model());
@@ -79,18 +87,18 @@ public class VehicleService {
         return true;
     }
 
-    private Vehicle getAccessibleVehicle(Long vehicleId, String userEmail, boolean isAdmin) {
+    private Vehicle getAccessibleVehicle(Long vehicleId, String currentUserEmail, boolean isAdmin) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(EntityNotFoundException::new);
 
-        if(isAdmin)
+        if (isAdmin)
             return vehicle;
 
-        if(vehicle.getOwner() == null) {
+        if (vehicle.getOwner() == null) {
             throw new EntityNotFoundException();
         }
 
-        if(!vehicle.getOwner().getEmail().equals(userEmail)) {
+        if (!vehicle.getOwner().getEmail().equals(currentUserEmail)) {
             throw new EntityNotFoundException();
         }
 
