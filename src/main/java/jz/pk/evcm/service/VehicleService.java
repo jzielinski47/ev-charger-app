@@ -1,7 +1,10 @@
 package jz.pk.evcm.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import jz.pk.evcm.dto.res.VehicleDTO;
+import jz.pk.evcm.dto.req.local.InputVehcileDto;
+import jz.pk.evcm.dto.res.ResVehicleDto;
+import jz.pk.evcm.entity.ConnectorType;
+import jz.pk.evcm.entity.User;
 import jz.pk.evcm.entity.Vehicle;
 import jz.pk.evcm.repository.VehicleRepository;
 
@@ -11,25 +14,34 @@ public class VehicleService {
 
     private VehicleRepository vehicleRepository;
 
-    List<VehicleDTO> getAllVehicles() {
+    List<ResVehicleDto> getAllVehicles() {
         List<Vehicle> vehicles = vehicleRepository.findAll();
-        return vehicles.stream().map(VehicleDTO::new).toList();
+        return vehicles.stream().map(ResVehicleDto::new).toList();
     }
 
-    VehicleDTO getVehicleById(Long id) {
+    ResVehicleDto getVehicleById(Long id) {
         Vehicle vehicle = vehicleRepository.findById(id).orElseThrow(EntityNotFoundException::new);
-        return new VehicleDTO(vehicle);
+        return new ResVehicleDto(vehicle);
     }
 
-    VehicleDTO addVehicle() {
+    ResVehicleDto addVehicle(User owner, InputVehcileDto dto) {
+        Vehicle newVehicle = new Vehicle();
+        newVehicle.setBrand(dto.brand());
+        newVehicle.setModel(dto.model());
+        newVehicle.setYearOfProduction(dto.yearOfProduction());
+        newVehicle.setConnector(ConnectorType.valueOf(dto.connector()));
+        newVehicle.setConnectorModified(dto.isConnectorModified());
+        newVehicle.setOwner(owner);
+
+        Vehicle savedVehicle = vehicleRepository.save(newVehicle);
+        return new ResVehicleDto(savedVehicle);
+    }
+
+    ResVehicleDto modifyVehicle() {
         return null;
     }
 
-    VehicleDTO modifyVehicle() {
-        return null;
-    }
-
-    VehicleDTO removeVehicle() {
+    ResVehicleDto removeVehicle() {
         return null;
     }
 

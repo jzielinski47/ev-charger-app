@@ -4,14 +4,14 @@ import jz.pk.evcm.entity.Vehicle;
 
 import java.time.Year;
 
-public record VehicleDTO(
+public record ResVehicleDto(
         Long id,
         String brand,
         String model,
         Year yearOfProduction,
         Long ownerId
 ) {
-    public VehicleDTO(Vehicle vehicle) {
+    public ResVehicleDto(Vehicle vehicle) {
         this(
                 vehicle.getId(),
                 vehicle.getBrand(),
