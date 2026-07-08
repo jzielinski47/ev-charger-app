@@ -1,23 +1,30 @@
-# EV Charger Map App
+# EV Charger Map App - Backend
 
-## Backend
+**Author:** Jakub Zieliński
 
-Author: Jakub Zieliński
+EV Charger Map is being developed as a Bachelor of Engineering Thesis for the Applied Computer Science program at Cracow University of Technology.
 
-EV Charger map is developed as a Bachelor of Engineering Thesis for Appplied Computer Science studies at Cracow
-University of Technology. Following repository is a backend side of the app, currently focusing on REST API to fetch
-chargers and manage systems users. it should contain the entire app as the project grows and the right documentation.
+This repository contains the backend service of the application. Currently, it provides an API to fetch EV charging stations and manage system users. As the project grows, this repository will serve as the complete backend ecosystem along with comprehensive documentation.
 
-### Technology
-- Java JDK 21 LTS
-- Java Spring Boot
+## Technology Stack
 
-### REST API
+- **Core:** Java 21 LTS, Spring Boot
+- **Build Tool:** Gradle (Kotlin DSL)
+- **Database:** PostgreSQL 16 (via Docker), H2 (for testing)
+- **API:** REST (Spring WebMVC), GraphQL
+- **Security:** Spring Security, JWT (jjwt) for authentication
+- **Mapping & Boilerplate:** MapStruct, Lombok
+- **Data Access:** Spring Data JPA
+- **Infrastructure:** Docker & Docker Compose
 
-### Getting Started
-To run the app you need to configure the environment first, starting with .env file.
+## Getting Started
 
-```.dotenv
+To run the application locally, you need to configure the environment and start the required database services.
+
+### 1. Environment Configuration
+Create a `.env` file in the root directory of the project and populate it with the required values:
+
+```dotenv
 DB_NAME=evcm
 DB_USER=your_postgres_user
 DB_PASSWORD=your_postgres_user_password
@@ -28,3 +35,26 @@ OPEN_CHARGE_API_KEY=open_charge_api_generated_key
 JWT_SECRET_KEY=jwt_secret_key
 JWT_EXP_TIME=3600000
 ```
+### 2. Database Setup
+The project uses a PostgreSQL database. You can start the database container using Docker Compose:
+
+```bash
+docker-compose up -d
+```
+(Note: The project includes the spring-boot-docker-compose dependency, which allows Spring Boot to automatically manage the Docker Compose lifecycle during startup).
+
+### 3. Running the Application
+Once the .env file is ready and the database is configured, start the application using the Gradle wrapper:
+
+```bash
+set -a && source .env && set +a && ./gradlew bootRun
+```
+
+### 4. Running Tests
+To execute the test suite (which uses an in-memory H2 database):
+
+```bash
+./gradlew test
+```
+
+## API Documentation
