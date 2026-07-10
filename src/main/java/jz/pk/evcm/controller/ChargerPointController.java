@@ -22,6 +22,20 @@ public class ChargerPointController {
         this.openChargerAPI = openChargerAPI;
     }
 
+    /*
+    * USER ENDPOINTS
+    * */
+
+    @GetMapping
+    public void getAllLocalChargers() {
+
+    }
+
+    /*
+    * EXTERNAL API REQUESTS
+    * ADMIN ONLY ENDPOINTS
+    * */
+
     @GetMapping("/ocm/poi")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ChargerPointDto>> fetchAllChargersInProximity() {
