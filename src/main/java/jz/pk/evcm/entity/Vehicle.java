@@ -27,4 +27,9 @@ public class Vehicle {
     private ConnectorType connector;
     private boolean isConnectorModified;
 
+    private Double maxAcPowerKw;
+    private Double maxDcPowerKw;
+    private Double batterYCapacityKwh;
+
+
 }
