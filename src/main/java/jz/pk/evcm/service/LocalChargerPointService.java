@@ -2,13 +2,19 @@ package jz.pk.evcm.service;
 
 import jz.pk.evcm.dto.res.ChargerPointResponse;
 import jz.pk.evcm.repository.ChargerPointRepository;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
 
+import java.awt.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class LocalChargerPointService {
     private final ChargerPointRepository chargerPointRepository;
+    private final GeometryFactory geometryFactory = new GeometryFactory();
 
     public LocalChargerPointService(ChargerPointRepository chargerPointRepository) {
         this.chargerPointRepository = chargerPointRepository;
@@ -28,7 +34,11 @@ public class LocalChargerPointService {
             Double distanceInKm,
             Integer maxResults
     ) {
-        return List.of();
+
+        Point userLocation = geometryFactory.createPoint(new Coordinate(longitude, latitude));
+        return chargerPointRepository.findNearbyChargers(userLocation, distanceInKm)
+                .stream().map(ChargerPointResponse::fromChargerPoint)
+                .collect(Collectors.toList());
     }
 
 
