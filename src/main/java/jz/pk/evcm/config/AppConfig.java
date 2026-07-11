@@ -61,9 +61,13 @@ public class AppConfig {
 
                      User admin = new User();
                      admin.setEmail(adminEmail);
+                     admin.setName("admin");
+                     admin.setSurname("admin");
                      admin.setPassword(passwordEncoder().encode(adminPassword));
                      admin.assignRole(UserRole.USER);
                      admin.assignRole(UserRole.ADMIN);
+
+                     userRepository.save(admin);
 
                     System.out.println("Admin user created: " + adminEmail);
                 } else {

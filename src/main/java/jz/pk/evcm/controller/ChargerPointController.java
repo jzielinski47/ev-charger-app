@@ -5,10 +5,7 @@ import jz.pk.evcm.service.OpenChargeApiService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,7 +20,7 @@ public class ChargerPointController {
     }
 
     /*
-    * USER ENDPOINTS
+    * USER ENDPOINT (PLANNED FOR GRAPH QL)
     * */
 
 
@@ -37,17 +34,31 @@ public class ChargerPointController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ChargerPointDto>> fetchAllChargersInProximity() {
         List<ChargerPointDto> req = openChargerAPI.fetchAllChargersInProximity(50.0,20.0,10.);
+
+        if (req == null) {
+            System.out.println("OpenCharge API returned NULL!");
+            return ResponseEntity.internalServerError().build();
+        }
+
         System.out.println("Fetched " + req.size() + " chargers from OpenCharge API");
-        return new ResponseEntity<>(req, HttpStatus.FOUND);
+        return new ResponseEntity<>(req, HttpStatus.OK);
 
     }
 
     @PostMapping("/ocm/save")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<ChargerPointDto>> fetchAllChargersInProximityAndSave() {
-        List<ChargerPointDto> req = openChargerAPI.fetchChargersAndSave(50.0,20.0,10., 100);
+    public ResponseEntity<List<ChargerPointDto>> fetchAllChargersInProximityAndSave(@RequestParam Double latitude, @RequestParam Double longitude, @RequestParam Double distance) {
+        System.out.println("Trying fetching all chargers");
+
+        List<ChargerPointDto> req = openChargerAPI.fetchChargersAndSave(latitude, longitude, distance, 100);
+
+        if (req == null) {
+            System.out.println("OpenCharge API returned NULL!");
+            return ResponseEntity.internalServerError().build();
+        }
+
         System.out.println("Fetched " + req.size() + " chargers from OpenCharge API");
-        return new ResponseEntity<>(req, HttpStatus.FOUND);
+        return new ResponseEntity<>(req, HttpStatus.OK);
 
     }
 

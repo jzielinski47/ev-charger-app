@@ -3,13 +3,10 @@ name: EVCM API
 description: EV Charging Management API collection. Covers authentication, vehicle management, and charger point discovery.
 variables:
   - key: baseUrl
-    value: 'http://localhost:8080'
-    description: Base URL of the EVCM API server
+    value: http://localhost:8080
+    secret: false
   - key: token
-    value: ''
-    description: JWT Bearer token obtained after login
-auth:
-  type: bearer
-  credentials:
-    - key: token
-      value: '{{token}}'
+    value: ""
+    secret: false
+  - key: auth_secret_03he
+    secret: true

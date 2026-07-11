@@ -24,12 +24,11 @@ public class OpenChargeApiService implements OpenChargeApiContract {
     private final ConnectionTypeRepository connectionTypeRepository;
     private final ChargerPointRepository chargerPointRepository;
     private final ChargerMapper chargerMapper;
-    @Value("https://api.openchargemap.io/v3")
-    private String apiBaseUrl;
-    RestClient restClient;
+    private final RestClient restClient;
 
     public OpenChargeApiService(
             @Value("${opencharge.api.key}") String apiKey,
+            @Value("${opencharge.api.base-url:https://api.openchargemap.io/v3}") String apiBaseUrl,
             ChargerPointRepository chargerPointRepository,
             ChargerMapper chargerMapper,
             ConnectionTypeRepository connectionTypeRepository) {
@@ -70,9 +69,11 @@ public class OpenChargeApiService implements OpenChargeApiContract {
                     .toList();
 
             List<ConnectionType> uniqueTypes = chargerEntities.stream()
+                    .filter(charger -> charger.getConnections() != null)
                     .flatMap(charger -> charger.getConnections().stream())
                     .map(Connection::getConnectionType)
                     .filter(java.util.Objects::nonNull)
+                    .filter(type -> type.getId() != null)
 
                     .collect(java.util.stream.Collectors.toMap(
                             ConnectionType::getId,

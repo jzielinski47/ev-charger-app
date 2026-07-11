@@ -1,0 +1,14 @@
+$kind: http-request
+name: Fetch and Save Chargers Around
+description: Fetches EV charger points in proximity and persists them to the database (lat=50.0, lon=20.0, radius=10km, max=100).
+url: "{{baseUrl}}/api/chargers/ocm/save?longitude=50.0748&latitude=19.997869&distance=10"
+method: POST
+queryParams:
+  longitude: "50.0748"
+  latitude: "19.997869"
+  distance: "10"
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+order: 2466476418567261

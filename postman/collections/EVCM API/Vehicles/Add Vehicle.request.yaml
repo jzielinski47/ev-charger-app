@@ -1,15 +1,14 @@
 $kind: http-request
 name: Add Vehicle
 method: POST
-url: '{{baseUrl}}/api/vehicles'
+url: "{{baseUrl}}/api/vehicles"
 headers:
-  - key: Content-Type
-    value: application/json
+  Content-Type: application/json
 queryParams:
   - key: targetEmail
-    value: ''
-    description: 'Admin only: add vehicle for a specific user by email'
+    value: ""
     disabled: true
+    description: "Admin only: add vehicle for a specific user by email"
 body:
   type: json
   content: |-
@@ -20,4 +19,8 @@ body:
       "connector": "CCS",
       "isConnectorModified": false
     }
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
 order: 3000
