@@ -2,5 +2,11 @@ $kind: collection
 name: EVCM API
 description: EV Charging Management API collection. Covers authentication, vehicle management, and charger point discovery.
 variables:
-  baseUrl: http://localhost:8080
-  token: ""
+  - key: baseUrl
+    value: http://localhost:8080
+    secret: false
+  - key: token
+    value: ""
+    secret: false
+  - key: auth_secret_03he
+    secret: true

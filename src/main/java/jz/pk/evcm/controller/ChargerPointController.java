@@ -50,7 +50,7 @@ public class ChargerPointController {
     public ResponseEntity<List<ChargerPointDto>> fetchAllChargersInProximityAndSave(@RequestParam Double latitude, @RequestParam Double longitude, @RequestParam Double distance) {
         System.out.println("Trying fetching all chargers");
 
-        List<ChargerPointDto> req = openChargerAPI.fetchChargersAndSave(latitude,longitude, distance, 100);
+        List<ChargerPointDto> req = openChargerAPI.fetchChargersAndSave(latitude, longitude, distance, 100);
 
         if (req == null) {
             System.out.println("OpenCharge API returned NULL!");
