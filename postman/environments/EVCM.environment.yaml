@@ -1,4 +1,8 @@
 name: EVCM
 values:
+  - key: baseUrl
+    value: ''
   - key: user_token
+    secret: true
+  - key: admin_token
     secret: true
