@@ -26,10 +26,7 @@ public class ChargerPointController {
     * USER ENDPOINTS
     * */
 
-    @GetMapping
-    public void getAllLocalChargers() {
 
-    }
 
     /*
     * EXTERNAL API REQUESTS
