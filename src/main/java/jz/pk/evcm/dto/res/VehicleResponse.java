@@ -1,5 +1,6 @@
 package jz.pk.evcm.dto.res;
 
+import jz.pk.evcm.entity.ConnectorType;
 import jz.pk.evcm.entity.Vehicle;
 
 import java.time.Year;

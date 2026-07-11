@@ -86,6 +86,14 @@ public class VehicleService {
         vehicleRepository.delete(vehicle);
     }
 
+    public VehicleResponse selectVehicle(Long vehicleId, String userEmail, boolean isAdmin) {
+
+        Vehicle vehicle = getAccessibleVehicle(vehicleId, userEmail, isAdmin);
+        User owner = userRepository.findByEmail(userEmail).orElseThrow(EntityNotFoundException::new);
+        owner.setSelectedVehicle(vehicle);
+        return new VehicleResponse(vehicle);
+    }
+
     private Vehicle getAccessibleVehicle(Long vehicleId, String currentUserEmail, boolean isAdmin) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(EntityNotFoundException::new);
