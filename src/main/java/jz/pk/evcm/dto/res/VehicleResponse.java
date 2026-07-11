@@ -10,9 +10,7 @@ public record VehicleResponse(
         String brand,
         String model,
         Year yearOfProduction,
-        Long ownerId,
-        ConnectorType connectorType,
-        boolean isConnectorModified
+        Long ownerId
 ) {
     public VehicleResponse(Vehicle vehicle) {
         this(
@@ -20,9 +18,7 @@ public record VehicleResponse(
                 vehicle.getBrand(),
                 vehicle.getModel(),
                 vehicle.getYearOfProduction(),
-                vehicle.getOwner() != null ? vehicle.getOwner().getId() : null,
-                vehicle.getConnector(),
-                vehicle.isConnectorModified()
+                vehicle.getOwner() != null ? vehicle.getOwner().getId() : null
         );
     }
 }
