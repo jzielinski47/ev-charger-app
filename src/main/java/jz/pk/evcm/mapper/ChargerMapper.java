@@ -33,6 +33,7 @@ public interface ChargerMapper {
         ConnectorType mappedConnector = dto.connectionType() != null
                 ? ConnectorType.fromTitle(dto.connectionType().title())
                 : ConnectorType.UNKNOWN;
+        connection.setConnectorType(mappedConnector);
 
         CurrentType validCurrentType;
         if (dto.currentType() != null && dto.currentType().title() != null) {
