@@ -15,7 +15,6 @@ public class Connection {
     private Integer amps;
     private Integer voltage;
     private Double powerKW;
-    private Integer currentTypeId;
     private Integer quantity;
 
     @Enumerated(EnumType.STRING)
