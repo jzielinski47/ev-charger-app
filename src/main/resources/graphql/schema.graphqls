@@ -1,0 +1,14 @@
+type Query {
+    chargerPointById(id: ID!): ChargerPoint
+    allChargerPoints: [ChargerPoint!]!
+}
+
+type ChargerPoint {
+    id: ID!
+    addressInfo: AddressInfo!
+}
+
+type AddressInfo {
+    id: ID!
+}
+
