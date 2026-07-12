@@ -2,7 +2,6 @@ package jz.pk.evcm.dto.res;
 
 import jz.pk.evcm.entity.ChargerPoint;
 import jz.pk.evcm.entity.Connection;
-import jz.pk.evcm.entity.ConnectionType;
 
 import java.util.List;
 

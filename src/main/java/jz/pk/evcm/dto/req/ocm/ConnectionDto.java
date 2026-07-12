@@ -7,6 +7,7 @@ public record ConnectionDto(
         Integer voltage,
         Double powerKW,
         Integer currentTypeId,
+        CurrentType currentType,
         Integer quantity
 ) {
 }
