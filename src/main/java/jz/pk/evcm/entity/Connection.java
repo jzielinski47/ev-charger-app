@@ -18,9 +18,13 @@ public class Connection {
     private Integer currentTypeId;
     private Integer quantity;
 
-    @ManyToOne
-    @JoinColumn(name = "connection_type_id")
-    private ConnectionType connectionType;
+    @Enumerated(EnumType.STRING)
+    private ConnectorType connectorType;
+
+    @Enumerated(EnumType.STRING)
+    private CurrentType currentType;
+
+
 
 
 }

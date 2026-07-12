@@ -7,16 +7,15 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
 
-import java.awt.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class LocalChargerPointService {
+public class LocalChargePointService {
     private final ChargerPointRepository chargerPointRepository;
     private final GeometryFactory geometryFactory = new GeometryFactory();
 
-    public LocalChargerPointService(ChargerPointRepository chargerPointRepository) {
+    public LocalChargePointService(ChargerPointRepository chargerPointRepository) {
         this.chargerPointRepository = chargerPointRepository;
     }
 
