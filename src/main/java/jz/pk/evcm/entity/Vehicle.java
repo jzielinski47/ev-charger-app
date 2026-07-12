@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Year;
+import java.util.List;
 
 @Entity
 @Builder
@@ -24,12 +25,16 @@ public class Vehicle {
     private String model;
     private Year yearOfProduction;
 
-    private ConnectorType connector;
-    private boolean isConnectorModified;
+    @ElementCollection(targetClass = ConnectorType.class)
+    @Enumerated(EnumType.STRING)
+    @CollectionTable(name = "vehicle_connector_types", joinColumns = @JoinColumn(name = "vehicle_id"))
+    @Column(name = "connector_type")
+    private List<ConnectorType> supportedConnectorTypes;
 
+    private Double batteryCapacityKwh;
     private Double maxAcPowerKw;
     private Double maxDcPowerKw;
-    private Double batterYCapacityKwh;
+    private Integer acPhases;
 
 
 }
