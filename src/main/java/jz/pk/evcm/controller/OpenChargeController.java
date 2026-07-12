@@ -10,27 +10,16 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/chargers")
-public class ChargerPointController {
+@RequestMapping("/api/admin/chargers")
+public class OpenChargeController {
 
     OpenChargeApiService openChargerAPI;
 
-    public ChargerPointController(OpenChargeApiService openChargerAPI) {
+    public OpenChargeController(OpenChargeApiService openChargerAPI) {
         this.openChargerAPI = openChargerAPI;
     }
 
-    /*
-    * USER ENDPOINT (PLANNED FOR GRAPH QL)
-    * */
-
-
-
-    /*
-    * EXTERNAL API REQUESTS
-    * ADMIN ONLY ENDPOINTS
-    * */
-
-    @GetMapping("/ocm/poi")
+    @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ChargerPointDto>> fetchAllChargersInProximity() {
         List<ChargerPointDto> req = openChargerAPI.fetchAllChargersInProximity(50.0,20.0,10.);
@@ -45,7 +34,7 @@ public class ChargerPointController {
 
     }
 
-    @PostMapping("/ocm/save")
+    @PostMapping("/save")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ChargerPointDto>> fetchAllChargersInProximityAndSave(@RequestParam Double latitude, @RequestParam Double longitude, @RequestParam Double distance) {
         System.out.println("Trying fetching all chargers");
@@ -59,7 +48,6 @@ public class ChargerPointController {
 
         System.out.println("Fetched " + req.size() + " chargers from OpenCharge API");
         return new ResponseEntity<>(req, HttpStatus.OK);
-
     }
 
 }
