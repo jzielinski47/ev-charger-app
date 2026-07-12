@@ -1,14 +1,20 @@
 $kind: http-request
 name: Fetch and Save Chargers Around Faculty
 description: Fetches EV charger points in proximity and persists them to the database (lat=50.0, lon=20.0, radius=10km, max=100).
-url: "{{baseUrl}}/api/chargers/ocm/save?latitude=50.07480984825251&longitude=19.99786902616269&distance=30.0"
+url: "{{baseUrl}}/api/admin/chargers/save?latitude=50.07480984825251&longitude=19.99786902616269&distance=15.0"
 method: POST
 queryParams:
-  latitude: "50.07480984825251"
-  longitude: "19.99786902616269"
-  distance: "30.0"
+  - key: latitude
+    value: "50.07480984825251"
+    disabled: false
+  - key: longitude
+    value: "19.99786902616269"
+    disabled: false
+  - key: distance
+    value: "15.0"
+    disabled: false
 auth:
   type: bearer
   credentials:
-    token: "{{auth_secret_03he}}"
+    token: "{{admin_token}}"
 order: 673928363116196
