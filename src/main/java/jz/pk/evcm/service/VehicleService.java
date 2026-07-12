@@ -59,8 +59,7 @@ public class VehicleService {
         newVehicle.setBrand(dto.brand());
         newVehicle.setModel(dto.model());
         newVehicle.setYearOfProduction(dto.yearOfProduction());
-        newVehicle.setConnector(mapConnectorType(dto.connector()));
-        newVehicle.setConnectorModified(dto.isConnectorModified());
+        newVehicle.setSupportedConnectorTypes(dto.supportedConnectorTypes());
         newVehicle.setOwner(owner);
 
         Vehicle savedVehicle = vehicleRepository.save(newVehicle);
@@ -74,9 +73,7 @@ public class VehicleService {
         vehicle.setBrand(dto.brand());
         vehicle.setModel(dto.model());
         vehicle.setYearOfProduction(dto.yearOfProduction());
-        vehicle.setConnector(mapConnectorType(dto.connector()));
-        vehicle.setConnectorModified(dto.isConnectorModified());
-
+        vehicle.setSupportedConnectorTypes(dto.supportedConnectorTypes());
         Vehicle updatedVehicle = vehicleRepository.save(vehicle);
         return new VehicleResponse(updatedVehicle);
     }
