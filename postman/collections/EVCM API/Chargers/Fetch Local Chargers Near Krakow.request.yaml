@@ -1,0 +1,27 @@
+$kind: graphql-request
+name: Fetch Local Chargers Near Krakow
+url: "{{baseUrl}}/graphql/chargers"
+query: |
+  query AllChargerPointsInProximity {
+      allChargerPointsInProximity(lat: 50.0, proximity: 3.0, lon: 20.0) {
+          id
+          addressInfo {
+              latitude
+              longitude
+          }
+          connections {
+              connectorType
+              currentType
+          }
+      }
+  }
+variables: ""
+settings: {}
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+schema:
+  source: file
+  location: /home/jzielinski/SoftwareDevelopment/EVCM/src/main/resources/graphql/schema.graphqls
+order: 3312120582485679

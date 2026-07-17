@@ -10,8 +10,8 @@ body:
   type: json
   content: |-
     {
-      "email": "john3342.doe@example.com",
-      "password": "password123"
+      "email": "john.doe@z.com",
+      "password": "zaq1"
     }
 scripts:
   - type: afterResponse
