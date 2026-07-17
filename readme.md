@@ -4,7 +4,15 @@
 
 EV Charger Map is being developed as a Bachelor of Engineering Thesis for the Applied Computer Science program at Cracow University of Technology.
 
-This repository contains the backend service of the application. Currently, it provides an API to fetch EV charging stations and manage system users. As the project grows, this repository will serve as the complete backend ecosystem along with comprehensive documentation.
+This repository contains the backend service of the application. Currently, it provides an API to fetch EV charging stations, manage system users and their personal vehicles.
+
+## Key Features:
+- **Secure Access & Roles:** Implemented JWT authentication with Role-Based Access Control (RBAC) to ensure data privacy and secure admin-only endpoints.
+- **Proximity Search:** Built spatial queries (via PostGIS and Hibernate-Spatial) leveraging database spatial indexing to help users instantly find nearby EV charging stations.
+- **Personalized Garage Management:** Developed CRUD operations allowing users to easily add, manage, and set an active vehicle.
+- **Hybrid API Architecture:** Utilized GraphQL for flexible, high-performance charger data retrieval, alongside REST APIs for authentication and vehicle management.
+- **Optimized Data Caching:** Integrated the OpenChargeAPI to automatically fetch and store charger data locally, ensuring fast and reliable query responses without hitting external API limits.
+  
 
 ## Technology Stack
 
