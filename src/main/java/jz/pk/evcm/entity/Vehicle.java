@@ -24,6 +24,7 @@ public class Vehicle {
     private String brand;
     private String model;
     private Year yearOfProduction;
+    private VehicleOriginatingMarket vehicleOriginatingMarket;
 
     @ElementCollection(targetClass = ConnectorType.class)
     @Enumerated(EnumType.STRING)
@@ -35,6 +36,5 @@ public class Vehicle {
     private Double maxAcPowerKw;
     private Double maxDcPowerKw;
     private Integer acPhases;
-
 
 }
