@@ -1,7 +1,7 @@
 package jz.pk.evcm.mapper;
 
 import jz.pk.evcm.dto.req.ocm.AddressInfoDto;
-import jz.pk.evcm.dto.req.ocm.ChargerPointDto;
+import jz.pk.evcm.dto.req.ocm.ChargerPointRequest;
 import jz.pk.evcm.dto.req.ocm.ConnectionDto;
 import jz.pk.evcm.entity.*;
 import org.locationtech.jts.geom.Coordinate;
@@ -14,7 +14,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface ChargerMapper {
 
-    ChargerPoint toEntity(ChargerPointDto dto);
+    ChargerPoint toEntity(ChargerPointRequest dto);
 
     @Mapping(target = "location", expression = "java(createPoint(dto.latitude(), dto.longitude()))")
     AddressInfo addressInfoDtoToAddressInfo(AddressInfoDto dto);

@@ -1,6 +1,6 @@
 package jz.pk.evcm.service;
 
-import jz.pk.evcm.dto.req.ocm.ChargerPointDto;
+import jz.pk.evcm.dto.req.ocm.ChargerPointRequest;
 import jz.pk.evcm.entity.ChargerPoint;
 import jz.pk.evcm.mapper.ChargerMapper;
 import jz.pk.evcm.repository.ChargerPointRepository;
@@ -37,8 +37,8 @@ public class OpenChargeApiService implements OpenChargeApiContract {
     }
 
     @Override
-    public List<ChargerPointDto> fetchAllChargersInProximity(Double latitude, Double longitude, Double distanceInKm,
-                                                             Integer maxResults) {
+    public List<ChargerPointRequest> fetchAllChargersInProximity(Double latitude, Double longitude, Double distanceInKm,
+                                                                 Integer maxResults) {
         return restClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/poi")
@@ -51,17 +51,17 @@ public class OpenChargeApiService implements OpenChargeApiContract {
                         .queryParam("maxresults", maxResults)
                         .build())
                 .retrieve()
-                .body(new ParameterizedTypeReference<List<ChargerPointDto>>() {
+                .body(new ParameterizedTypeReference<List<ChargerPointRequest>>() {
                 });
     }
 
-    public List<ChargerPointDto> fetchChargersAndSave(
+    public List<ChargerPointRequest> fetchChargersAndSave(
             Double latitude,
             Double longitude,
             Double distanceInKm,
             Integer maxResults
     ) {
-        List<ChargerPointDto> fetchedChargers = this.fetchAllChargersInProximity(latitude, longitude, distanceInKm,
+        List<ChargerPointRequest> fetchedChargers = this.fetchAllChargersInProximity(latitude, longitude, distanceInKm,
                 maxResults);
 
         if (fetchedChargers == null || fetchedChargers.isEmpty()) {

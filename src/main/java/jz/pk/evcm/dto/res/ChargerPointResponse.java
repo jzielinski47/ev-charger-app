@@ -1,5 +1,6 @@
 package jz.pk.evcm.dto.res;
 
+import jz.pk.evcm.entity.AddressInfo;
 import jz.pk.evcm.entity.ChargerPoint;
 import jz.pk.evcm.entity.Connection;
 
@@ -7,7 +8,7 @@ import java.util.List;
 
 public record ChargerPointResponse(
         Long id,
-        AddressResponse address,
+        AddressResponse addressInfo,
         List<ConnectionResponse> connections
 ) {
     public static ChargerPointResponse fromChargerPoint(ChargerPoint chargerPoint) {
@@ -35,7 +36,7 @@ record AddressResponse(
         Double longitude,
         String accessComments
 ) {
-    public static AddressResponse fromAddressInfo(jz.pk.evcm.entity.AddressInfo address) {
+    public static AddressResponse fromAddressInfo(AddressInfo address) {
         if (address == null) return null;
 
         Double lat = null;

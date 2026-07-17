@@ -1,6 +1,6 @@
 package jz.pk.evcm.controller;
 
-import jz.pk.evcm.dto.req.ocm.ChargerPointDto;
+import jz.pk.evcm.dto.req.ocm.ChargerPointRequest;
 import jz.pk.evcm.service.OpenChargeApiService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +21,8 @@ public class OpenChargeController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<ChargerPointDto>> fetchAllChargersInProximity() {
-        List<ChargerPointDto> req = openChargerAPI.fetchAllChargersInProximity(50.0,20.0,10.);
+    public ResponseEntity<List<ChargerPointRequest>> fetchAllChargersInProximity() {
+        List<ChargerPointRequest> req = openChargerAPI.fetchAllChargersInProximity(50.0,20.0,10.);
 
         if (req == null) {
             System.out.println("OpenCharge API returned NULL!");
@@ -36,10 +36,10 @@ public class OpenChargeController {
 
     @PostMapping("/save")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<ChargerPointDto>> fetchAllChargersInProximityAndSave(@RequestParam Double latitude, @RequestParam Double longitude, @RequestParam Double distance) {
+    public ResponseEntity<List<ChargerPointRequest>> fetchAllChargersInProximityAndSave(@RequestParam Double latitude, @RequestParam Double longitude, @RequestParam Double distance) {
         System.out.println("Trying fetching all chargers");
 
-        List<ChargerPointDto> req = openChargerAPI.fetchChargersAndSave(latitude, longitude, distance, 100);
+        List<ChargerPointRequest> req = openChargerAPI.fetchChargersAndSave(latitude, longitude, distance, 100);
 
         if (req == null) {
             System.out.println("OpenCharge API returned NULL!");
