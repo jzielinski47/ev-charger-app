@@ -41,7 +41,7 @@ public interface ChargerMapper {
         } else {
             validCurrentType = switch (mappedConnector) {
                 case CHADEMO, CCS2 -> CurrentType.DC;
-                case TYPE_2 -> CurrentType.AC_3P;
+                case TYPE_2, TYPE_2_TETHERED, TYPE_2_SOCKET_ONLY -> CurrentType.AC_3P;
                 default -> CurrentType.UNKNOWN;
             };
         }
