@@ -35,6 +35,7 @@ public class LocalChargePointService {
     ) {
 
         Point userLocation = geometryFactory.createPoint(new Coordinate(longitude, latitude));
+        userLocation.setSRID(4326); // set the same coordinate system as GPS (WGS84)
         return chargerPointRepository.findNearbyChargers(userLocation, distanceInKm)
                 .stream().map(ChargerPointResponse::fromChargerPoint)
                 .collect(Collectors.toList());

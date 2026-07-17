@@ -8,7 +8,7 @@ import java.util.List;
 
 public record ChargerPointResponse(
         Long id,
-        AddressResponse address,
+        AddressResponse addressInfo,
         List<ConnectionResponse> connections
 ) {
     public static ChargerPointResponse fromChargerPoint(ChargerPoint chargerPoint) {
