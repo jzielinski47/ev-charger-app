@@ -62,9 +62,9 @@ record ConnectionResponse(
         Integer amps,
         Integer voltage,
         Double powerKW,
-        Integer currentTypeId,
         Integer quantity,
-        ConnectionTypeResponse connectionType
+        String connectorType,
+        String currentType
 ) {
     public static ConnectionResponse fromConnection(Connection connection) {
         if (connection == null) {
@@ -76,26 +76,10 @@ record ConnectionResponse(
                 connection.getAmps(),
                 connection.getVoltage(),
                 connection.getPowerKW(),
-                connection.getCurrentTypeId(),
                 connection.getQuantity(),
-                ConnectionTypeResponse.fromConnectionType(connection.getConnectionType())
+                String.valueOf(connection.getConnectorType()),
+                String.valueOf(connection.getCurrentType())
         );
     }
 }
 
-record ConnectionTypeResponse(
-        Long id,
-        String title,
-        String formalName
-) {
-    public static ConnectionTypeResponse fromConnectionType(ConnectionType type) {
-        if (type == null) {
-            return null;
-        }
-        return new ConnectionTypeResponse(
-                type.getId(),
-                type.getTitle(),
-                type.getFormalName()
-        );
-    }
-}
