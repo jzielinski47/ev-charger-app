@@ -1,5 +1,6 @@
 package jz.pk.evcm.dto.res;
 
+import jz.pk.evcm.entity.AddressInfo;
 import jz.pk.evcm.entity.ChargerPoint;
 import jz.pk.evcm.entity.Connection;
 
@@ -35,7 +36,7 @@ record AddressResponse(
         Double longitude,
         String accessComments
 ) {
-    public static AddressResponse fromAddressInfo(jz.pk.evcm.entity.AddressInfo address) {
+    public static AddressResponse fromAddressInfo(AddressInfo address) {
         if (address == null) return null;
 
         Double lat = null;

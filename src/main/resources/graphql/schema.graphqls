@@ -1,14 +1,30 @@
 type Query {
     chargerPointById(id: ID!): ChargerPoint
-    allChargerPoints: [ChargerPoint!]!
+    allChargerPointsInProximity(lat: Float, lon: Float, proximity: Float): [ChargerPoint!]!
 }
 
 type ChargerPoint {
     id: ID!
     addressInfo: AddressInfo!
+    connections: [Connection!]!
 }
 
 type AddressInfo {
     id: ID!
+    title: String
+    addressLine1: String
+    town: String
+    latitude: Float
+    longitude: Float
+    accessComments: String
 }
 
+type Connection {
+    id: ID!
+    amps: Int
+    voltage: Int
+    powerKW: Float
+    quantity: Int
+    connectorType: String
+    currentType: String
+}
