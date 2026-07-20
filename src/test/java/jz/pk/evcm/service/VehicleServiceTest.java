@@ -1,11 +1,9 @@
 package jz.pk.evcm.service;
 
 import jz.pk.evcm.dto.res.VehicleResponse;
-import jz.pk.evcm.entity.UserRole;
 import jz.pk.evcm.entity.Vehicle;
 import jz.pk.evcm.exception.ForbiddenAccessException;
 import jz.pk.evcm.repository.VehicleRepository;
-
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,11 +11,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-
-import static reactor.core.publisher.Mono.when;
 
 @ExtendWith(MockitoExtension.class)
 public class VehicleServiceTest {
@@ -30,7 +25,7 @@ public class VehicleServiceTest {
 
     @Test
     public void VehicleService_GetAllVehiclesAsAdmin_ReturnsAllVehicles() {
-        
+
         String adminEmail = "admin@test.invalid";
         Vehicle vehicle1 = new Vehicle();
         vehicle1.setBrand("Tesla");
@@ -38,7 +33,7 @@ public class VehicleServiceTest {
         Mockito.when(vehicleRepository.findAll()).thenReturn(List.of(vehicle1));
 
         List<VehicleResponse> result = vehicleService.getAllVehicles(adminEmail, true, null);
-       
+
         Assertions.assertThat(result).isNotNull();
         Assertions.assertThat(result).hasSize(1);
         Assertions.assertThat(result.getFirst().brand()).isEqualTo("Tesla");
@@ -62,7 +57,7 @@ public class VehicleServiceTest {
 
     @Test
     public void VehicleService_GetAllYourVehiclesAsUser_ReturnsAllYourVehicles() {
-    
+
         String userEmail = "owner@test.invalid";
         Vehicle vehicle1 = new Vehicle();
         vehicle1.setBrand("Nissan");
@@ -85,15 +80,16 @@ public class VehicleServiceTest {
         Vehicle vehicle1 = new Vehicle();
         vehicle1.setBrand("Audi");
         Vehicle vehicle2 = new Vehicle();
-        vehicle1.setBrand("Ford");
+        vehicle2.setBrand("Ford");
 
         Mockito.when(vehicleRepository.findByOwnerEmail(targetEmail)).thenReturn(List.of(vehicle1, vehicle2));
 
         List<VehicleResponse> result = vehicleService.getAllVehicles(adminEmail, true, targetEmail);
 
         Assertions.assertThat(result).hasSize(2);
-        Assertions.assertThat(result.get(0).brand()).isEqualTo("Audi");
-        Assertions.assertThat(result.get(1).brand()).isEqualTo("Ford");
+        Assertions.assertThat(result)
+                .extracting(VehicleResponse::brand)
+                .containsExactlyInAnyOrderElementsOf(List.of("Audi", "Ford"));
         Mockito.verify(vehicleRepository, Mockito.times(1)).findByOwnerEmail(targetEmail);
     }
 
