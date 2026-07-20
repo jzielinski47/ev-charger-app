@@ -77,6 +77,19 @@ public class VehicleRepositoryTest {
     }
 
     @Test
+    public void VehicleRepository_findByIdAndOwnerEmail_WrongEmail_ReturnsEmptyOptional() {
+        User owner = User.builder().email("user@email.test").name("name").surname("sur").password("1234").build();
+        entityManager.persist(owner);
+
+        Vehicle vehicle = VehicleTestFactory.baseVehicleBuilder().owner(owner).build();
+        Vehicle savedVehicle = vehicleRepository.save(vehicle);
+
+        Optional<Vehicle> foundVehicle = vehicleRepository.findByIdAndOwnerEmail(savedVehicle.getId(), "wrong@email.test");
+
+        Assertions.assertThat(foundVehicle).isEmpty();
+    }
+
+    @Test
     public void VehicleRepository_findAll_ReturnsAllSavedVehicles() {
         Vehicle vehicle1 = VehicleTestFactory.baseVehicleBuilder().model("Model Y").build();
         Vehicle vehicle2 = VehicleTestFactory.baseVehicleBuilder().model("Model 3").build();
