@@ -39,6 +39,22 @@ public class VehicleRepositoryTest {
     }
 
     @Test
+    public void VehicleRepository_save_WithNoConnectors_ReturnsSavedVehicle() {
+        // Arrange
+        Vehicle vehicle = VehicleTestFactory.baseVehicleBuilder().supportedConnectorTypes(List.of()).build();
+
+        // Act
+        Vehicle savedVehicle = vehicleRepository.save(vehicle);
+
+        // Assert
+        Assertions.assertThat(savedVehicle).isNotNull();
+        Assertions.assertThat(savedVehicle.getId()).isGreaterThan(0);
+        Assertions.assertThat(savedVehicle.getBrand()).isEqualTo("Tesla");
+        Assertions.assertThat(savedVehicle.getSupportedConnectorTypes().isEmpty());
+
+    }
+
+    @Test
     public void VehicleRepository_save_WithMultipleConnectors_ReturnsVehicleWithAllConnectors() {
         Vehicle vehicle = VehicleTestFactory.baseVehicleBuilder()
                 .supportedConnectorTypes(List.of(
