@@ -37,4 +37,7 @@ out/
 .vscode/
 
 .env
+
+## POSTMAN TESTS
 .postman
+.postman/
