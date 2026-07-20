@@ -76,36 +76,6 @@ public class VehicleRepositoryTest {
     }
 
     @Test
-    public void VehicleRepository_findByOwnerEmail_ExistingEmail_ReturnsListOfVehicles() {
-        User owner = User.builder().email("user@email.test").name("name").surname("sur").password("1234").build();
-        entityManager.persist(owner);
-
-        Vehicle vehicle1 = VehicleTestFactory.baseVehicleBuilder().owner(owner).build();
-        Vehicle vehicle2 = VehicleTestFactory.baseVehicleBuilder().owner(owner).model("Model 3").build();
-        vehicleRepository.saveAll(List.of(vehicle1, vehicle2));
-
-        List<Vehicle> foundVehicles = vehicleRepository.findByOwnerEmail("user@email.test");
-
-        Assertions.assertThat(foundVehicles).hasSize(2);
-        Assertions.assertThat(foundVehicles)
-                .extracting(Vehicle::getModel)
-                .containsExactlyInAnyOrder("Model Y", "Model 3");
-    }
-
-    @Test
-    public void VehicleRepository_findByIdAndOwnerEmail_WrongEmail_ReturnsEmptyOptional() {
-        User owner = User.builder().email("user@email.test").name("name").surname("sur").password("1234").build();
-        entityManager.persist(owner);
-
-        Vehicle vehicle = VehicleTestFactory.baseVehicleBuilder().owner(owner).build();
-        Vehicle savedVehicle = vehicleRepository.save(vehicle);
-
-        Optional<Vehicle> foundVehicle = vehicleRepository.findByIdAndOwnerEmail(savedVehicle.getId(), "wrong@email.test");
-
-        Assertions.assertThat(foundVehicle).isEmpty();
-    }
-
-    @Test
     public void VehicleRepository_findAll_ReturnsAllSavedVehicles() {
         Vehicle vehicle1 = VehicleTestFactory.baseVehicleBuilder().model("Model Y").build();
         Vehicle vehicle2 = VehicleTestFactory.baseVehicleBuilder().model("Model 3").build();
@@ -134,6 +104,36 @@ public class VehicleRepositoryTest {
     @Test
     public void VehicleRepository_findById_NonExistingId_ReturnsEmptyOptional() {
         Optional<Vehicle> foundVehicle = vehicleRepository.findById(999L);
+
+        Assertions.assertThat(foundVehicle).isEmpty();
+    }
+
+    @Test
+    public void VehicleRepository_findByOwnerEmail_ExistingEmail_ReturnsListOfVehicles() {
+        User owner = User.builder().email("user@email.test").name("name").surname("sur").password("1234").build();
+        entityManager.persist(owner);
+
+        Vehicle vehicle1 = VehicleTestFactory.baseVehicleBuilder().owner(owner).build();
+        Vehicle vehicle2 = VehicleTestFactory.baseVehicleBuilder().owner(owner).model("Model 3").build();
+        vehicleRepository.saveAll(List.of(vehicle1, vehicle2));
+
+        List<Vehicle> foundVehicles = vehicleRepository.findByOwnerEmail("user@email.test");
+
+        Assertions.assertThat(foundVehicles).hasSize(2);
+        Assertions.assertThat(foundVehicles)
+                .extracting(Vehicle::getModel)
+                .containsExactlyInAnyOrder("Model Y", "Model 3");
+    }
+
+    @Test
+    public void VehicleRepository_findByIdAndOwnerEmail_WrongEmail_ReturnsEmptyOptional() {
+        User owner = User.builder().email("user@email.test").name("name").surname("sur").password("1234").build();
+        entityManager.persist(owner);
+
+        Vehicle vehicle = VehicleTestFactory.baseVehicleBuilder().owner(owner).build();
+        Vehicle savedVehicle = vehicleRepository.save(vehicle);
+
+        Optional<Vehicle> foundVehicle = vehicleRepository.findByIdAndOwnerEmail(savedVehicle.getId(), "wrong@email.test");
 
         Assertions.assertThat(foundVehicle).isEmpty();
     }
