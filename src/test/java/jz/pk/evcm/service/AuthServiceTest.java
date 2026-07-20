@@ -2,6 +2,7 @@ package jz.pk.evcm.service;
 
 import jz.pk.evcm.dto.req.local.LoginUserDto;
 import jz.pk.evcm.dto.req.local.SignupUserDto;
+import jz.pk.evcm.dto.res.UserResponse;
 import jz.pk.evcm.entity.User;
 import jz.pk.evcm.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -37,8 +38,8 @@ public class AuthServiceTest {
     @Test
     public void testSignupUser_Success() {
         SignupUserDto dto = new SignupUserDto(
-                "Test",
-                "User",
+                "Name",
+                "Surname",
                 "test@test.test",
                 "password");
 
@@ -51,11 +52,13 @@ public class AuthServiceTest {
         when(passwordEncoder.encode(dto.password())).thenReturn("hashed");
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
-        User result = authService.signupUser(dto);
+        UserResponse result = authService.signupUser(dto);
 
         assertNotNull(result);
-        assertEquals("test@test.test", result.getEmail());
-        assertEquals("hashed", result.getPassword());
+        assertEquals("test@test.test", result.email());
+        assertEquals("Name", result.name());
+        assertEquals("Surname", result.surname());
+        assertEquals(1, result.roles().size());
 
         verify(passwordEncoder, times(1)).encode(dto.password());
         verify(userRepository, times(1)).save(any(User.class));
