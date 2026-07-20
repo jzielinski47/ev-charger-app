@@ -25,4 +25,12 @@ public class GlobalExceptionHandler {
                 Map.of("error", "Authentication failed", "message", ex.getMessage())
         );
     }
+
+    @ExceptionHandler(ForbiddenAccessException.class)
+    public ResponseEntity<Object> handleForbiddenAccessException(ForbiddenAccessException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                Map.of("error", "Access Denied", "message", ex.getMessage())
+        );
+    }
+
 }

@@ -6,22 +6,20 @@ import jz.pk.evcm.dto.res.VehicleResponse;
 import jz.pk.evcm.entity.ConnectorType;
 import jz.pk.evcm.entity.User;
 import jz.pk.evcm.entity.Vehicle;
+import jz.pk.evcm.exception.ForbiddenAccessException;
 import jz.pk.evcm.repository.UserRepository;
 import jz.pk.evcm.repository.VehicleRepository;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class VehicleService {
 
     private final VehicleRepository vehicleRepository;
     private final UserRepository userRepository;
-
-    public VehicleService(VehicleRepository vehicleRepository, UserRepository userRepository) {
-        this.vehicleRepository = vehicleRepository;
-        this.userRepository = userRepository;
-    }
 
     public List<VehicleResponse> getAllVehicles(String userEmail, boolean isAdmin, String targetUserEmail) {
         List<Vehicle> vehicles;
@@ -33,6 +31,9 @@ public class VehicleService {
                 vehicles = vehicleRepository.findAll();
             }
         } else {
+            if (targetUserEmail != null && !targetUserEmail.isBlank() && !targetUserEmail.equals(userEmail)) {
+                throw new ForbiddenAccessException("Access Denied. You cannot view other users' vehicles.");
+            }
             vehicles = vehicleRepository.findByOwnerEmail(userEmail);
         }
 
