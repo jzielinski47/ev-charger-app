@@ -1,4 +1,4 @@
-# EV Charger Map App - Backend
+# EV Charger App - Backend
 
 **Author:** Jakub Zieliński
 
