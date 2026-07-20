@@ -24,6 +24,7 @@ This repository contains the backend service of the application. Currently, it p
 - **Mapping & Boilerplate:** MapStruct, Lombok
 - **Data Access:** Spring Data JPA
 - **Infrastructure:** Docker & Docker Compose
+- **Test Coverage:** JUnit 5, Mockito
 
 ## Getting Started
 
