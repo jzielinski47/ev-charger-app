@@ -18,7 +18,7 @@ This repository contains the backend service of the application. Currently, it p
 
 - **Core:** Java 21 LTS, Spring Boot
 - **Build Tool:** Gradle (Kotlin DSL)
-- **Database:** PostgreSQL 16 (via Docker), H2 (for testing)
+- **Database:** PostgreSQL 16 (via Docker Alpine Based), H2 (for testing)
 - **API:** REST (Spring WebMVC), GraphQL
 - **Security:** Spring Security, JWT (jjwt) for authentication
 - **Mapping & Boilerplate:** MapStruct, Lombok
