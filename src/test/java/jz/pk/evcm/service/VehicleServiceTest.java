@@ -1,5 +1,6 @@
 package jz.pk.evcm.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import jz.pk.evcm.dto.res.VehicleResponse;
 import jz.pk.evcm.entity.Vehicle;
 import jz.pk.evcm.exception.ForbiddenAccessException;
@@ -12,7 +13,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Year;
 import java.util.List;
+import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 public class VehicleServiceTest {
@@ -114,18 +117,113 @@ public class VehicleServiceTest {
      */
 
     @Test
-    public void VehilceService_GetVehicleById_AsAdmin_ReturnsVehicle() {}
+    public void VehilceService_GetVehicleById_AsAdmin_ReturnsVehicle() {
+
+        Long searchedId = 2L;
+        String userEmail = "admin@test.invalid";
+        Vehicle vehicle1 = new Vehicle();
+        vehicle1.setId(searchedId);
+        vehicle1.setBrand("Volvo");
+        vehicle1.setModel("XC90");
+        vehicle1.setYearOfProduction(Year.of(2023));
+
+        Mockito.when(vehicleRepository.findById(searchedId)).thenReturn(Optional.of(vehicle1));
+
+        VehicleResponse result = vehicleService.getVehicleById(searchedId, userEmail, true);
+
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result.brand()).isEqualTo("Volvo");
+        Assertions.assertThat(result.model()).isEqualTo("XC90");
+        Assertions.assertThat(result.yearOfProduction()).isEqualTo(Year.of(2023));
+
+        Mockito.verify(vehicleRepository, Mockito.times(1)).findById(searchedId);
+    }
 
     @Test
-    public void VehilceService_GetVehicleById_AsAdmin_WithInvalidId_ReturnsException() {}
+    public void VehilceService_GetVehicleById_AsAdmin_WithInvalidId_ReturnsException() {
+
+        Long searchedId = 99L;
+        String userEmail = "admin@test.invalid";
+
+        Mockito.when(vehicleRepository.findById(searchedId)).thenReturn(Optional.empty());
+
+        Assertions.assertThatThrownBy(() -> {
+            vehicleService.getVehicleById(searchedId, userEmail, true);
+        }).isInstanceOf(EntityNotFoundException.class);
+    }
 
     @Test
-    public void VehilceService_GetVehicleById_AsUser_OnOwnedVehicle_ReturnsVehicle() {}
+    public void VehilceService_GetVehicleById_AsUser_OnOwnedVehicle_ReturnsVehicle() {
+
+        Long searchedId = 1L;
+        String userEmail = "user@test.invalid";
+
+        jz.pk.evcm.entity.User owner = new jz.pk.evcm.entity.User();
+        owner.setEmail(userEmail);
+
+        Vehicle vehicle1 = new Vehicle();
+        vehicle1.setId(searchedId);
+        vehicle1.setBrand("Toyota");
+        vehicle1.setOwner(owner);
+
+        Mockito.when(vehicleRepository.findById(searchedId)).thenReturn(Optional.of(vehicle1));
+
+        VehicleResponse result = vehicleService.getVehicleById(searchedId, userEmail, false);
+
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result.brand()).isEqualTo("Toyota");
+        Mockito.verify(vehicleRepository, Mockito.times(1)).findById(searchedId);
+    }
 
     @Test
-    public void VehilceService_GetVehicleById_AsUser_OnOthersVehicle_ReturnsException() {}
+    public void VehilceService_GetVehicleById_AsUser_OnOthersVehicle_ReturnsException() {
+
+        Long searchedId = 1L;
+        String userEmail = "user@test.invalid";
+        String otherUserEmail = "other@test.invalid";
+
+        jz.pk.evcm.entity.User otherOwner = new jz.pk.evcm.entity.User();
+        otherOwner.setEmail(otherUserEmail);
+
+        Vehicle vehicle1 = new Vehicle();
+        vehicle1.setId(searchedId);
+        vehicle1.setOwner(otherOwner);
+
+        Mockito.when(vehicleRepository.findById(searchedId)).thenReturn(Optional.of(vehicle1));
+
+        Assertions.assertThatThrownBy(() -> {
+            vehicleService.getVehicleById(searchedId, userEmail, false);
+        }).isInstanceOf(EntityNotFoundException.class);
+    }
 
     @Test
-    public void VehilceService_GetVehicleById_AsUser_WithInvalidId_ReturnsException() {}
+    public void VehilceService_GetVehicleById_AsUser_WithInvalidId_ReturnsException() {
+
+        Long searchedId = 99L;
+        String userEmail = "user@test.invalid";
+
+        Mockito.when(vehicleRepository.findById(searchedId)).thenReturn(Optional.empty());
+
+        Assertions.assertThatThrownBy(() -> {
+            vehicleService.getVehicleById(searchedId, userEmail, false);
+        }).isInstanceOf(EntityNotFoundException.class);
+    }
+
+    @Test
+    public void VehilceService_GetVehicleById_AsUser_OnVehicleWithNoOwner_ReturnsException() {
+
+        Long searchedId = 3L;
+        String userEmail = "user@test.invalid";
+
+        Vehicle vehicle1 = new Vehicle();
+        vehicle1.setId(searchedId);
+        vehicle1.setOwner(null);
+
+        Mockito.when(vehicleRepository.findById(searchedId)).thenReturn(Optional.of(vehicle1));
+
+        Assertions.assertThatThrownBy(() -> {
+            vehicleService.getVehicleById(searchedId, userEmail, false);
+        }).isInstanceOf(EntityNotFoundException.class);
+    }
 
 }
