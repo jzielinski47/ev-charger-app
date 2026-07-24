@@ -1,6 +1,7 @@
 package jz.pk.evcm.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import jz.pk.evcm.dto.req.local.VehicleRequest;
 import jz.pk.evcm.dto.res.VehicleResponse;
 import jz.pk.evcm.entity.Vehicle;
 import jz.pk.evcm.exception.ForbiddenAccessException;
@@ -224,6 +225,30 @@ public class VehicleServiceTest {
         Assertions.assertThatThrownBy(() -> {
             vehicleService.getVehicleById(searchedId, userEmail, false);
         }).isInstanceOf(EntityNotFoundException.class);
+    }
+
+    /*
+     * tested method VehicleResponse addVehicle(VehicleRequest dto, String currentUserEmail, boolean isAdmin, String targetUserEmail)
+     */
+
+    @Test
+    public void VehicleService_AddVehicle_AsUser_CreatesForCurrentUser() {
+
+    }
+
+    @Test
+    public void VehicleService_AddVehicle_AsAdmin_OnBehalfOfUser_CreatesForTargetUser() {
+
+    }
+
+    @Test
+    public void VehicleService_AddVehicle_AsUser_OnBehalfOfUser_CreatesForCurrentUser() {
+
+    }
+
+    @Test
+    public void VehicleService_AddVehicle_WithInvalidUser_ReturnsException() {
+
     }
 
 }
