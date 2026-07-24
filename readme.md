@@ -66,4 +66,15 @@ To execute the test suite (which uses an in-memory H2 database):
 ./gradlew test
 ```
 
+## Architecture
+
 ## API Documentation
+
+## Copyright & Licensing
+Copyright (c) 2026 Jakub Zieliński. All Rights Reserved.
+
+This repository and its source code are published strictly for portfolio and educational review. You are welcome to inspect the code to examine the architectural concepts and coding solutions.
+
+However, this is a proprietary application. You may not copy, modify, distribute, or use this code (in whole or in part) for any commercial or non-commercial purpose without my explicit written permission.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
