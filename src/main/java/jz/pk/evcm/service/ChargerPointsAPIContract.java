@@ -4,7 +4,7 @@ import jz.pk.evcm.dto.req.ocm.ChargerPointRequest;
 
 import java.util.List;
 
-public interface OpenChargeApiContract {
+public interface ChargerPointsAPIContract {
 
     List<ChargerPointRequest> fetchAllChargersInProximity(Double latitude, Double longitude, Double distanceInKm, Integer maxResults);
 

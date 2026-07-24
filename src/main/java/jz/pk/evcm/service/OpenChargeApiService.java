@@ -17,7 +17,7 @@ import java.util.List;
  */
 
 @Service
-public class OpenChargeApiService implements OpenChargeApiContract {
+public class OpenChargeApiService implements ChargerPointsAPIContract {
 
     private final ChargerPointRepository chargerPointRepository;
     private final ChargerMapper chargerMapper;
