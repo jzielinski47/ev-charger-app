@@ -23,8 +23,13 @@ public class VehicleServiceTest {
     @InjectMocks
     private VehicleService vehicleService;
 
+    /*
+    * Unit tests for service layer
+    * tested method List<VehicleResponse> getAllVehicles(String userEmail, boolean isAdmin, String targetUserEmail)
+    */
+
     @Test
-    public void VehicleService_GetAllVehiclesAsAdmin_ReturnsAllVehicles() {
+    public void VehicleService_GetAllVehicles_AsAdmin_ReturnsAllVehicles() {
 
         String adminEmail = "admin@test.invalid";
         Vehicle vehicle1 = new Vehicle();
@@ -41,7 +46,7 @@ public class VehicleServiceTest {
     }
 
     @Test
-    public void VehicleService_GetAllVehiclesAsUser_ReturnsAllVehicles() {
+    public void VehicleService_GetAllVehicles_AsUser_ReturnsAllVehiclesOwnedByYou() {
         String userEmail = "user@test.invalid";
         Vehicle vehicle1 = new Vehicle();
         vehicle1.setBrand("Mercedes-Benz");
@@ -56,7 +61,7 @@ public class VehicleServiceTest {
     }
 
     @Test
-    public void VehicleService_GetAllYourVehiclesAsUser_ReturnsAllYourVehicles() {
+    public void VehicleService_GetAllVehicles_OwnedByYou_AsUser_ReturnsAllVehiclesOwnedByYou() {
 
         String userEmail = "owner@test.invalid";
         Vehicle vehicle1 = new Vehicle();
@@ -73,7 +78,7 @@ public class VehicleServiceTest {
     }
 
     @Test
-    public void VehicleService_GetAllSingleUsersVehiclesAsAdmin_ReturnsAllSingleUsersVehicles() {
+    public void VehicleService_GetAllVehicles_OwnedByUser_AsUser_AsAdmin_ReturnsAllVehicles() {
 
         String adminEmail = "admin@test.invalid";
         String targetEmail = "target@test.invalid";
@@ -94,7 +99,7 @@ public class VehicleServiceTest {
     }
 
     @Test
-    public void VehicleService_GetAllSingleUsersVehiclesAsOtherUser_ReturnsException() {
+    public void VehicleService_GetAllVehicles_OwnedByUser_AsOtherUser_ReturnsException() {
 
         String userEmail = "user@test.invalid";
         String targetEmail = "otheruser@test.invalid";
@@ -103,5 +108,24 @@ public class VehicleServiceTest {
             vehicleService.getAllVehicles(userEmail, false, targetEmail);
         }).isInstanceOf(ForbiddenAccessException.class);
     }
+
+    /*
+     * tested method VehicleResponse getVehicleById(Long vehicleId, String currentUserEmail, boolean isAdmin)
+     */
+
+    @Test
+    public void VehilceService_GetVehicleById_AsAdmin_ReturnsVehicle() {}
+
+    @Test
+    public void VehilceService_GetVehicleById_AsAdmin_WithInvalidId_ReturnsException() {}
+
+    @Test
+    public void VehilceService_GetVehicleById_AsUser_OnOwnedVehicle_ReturnsVehicle() {}
+
+    @Test
+    public void VehilceService_GetVehicleById_AsUser_OnOthersVehicle_ReturnsException() {}
+
+    @Test
+    public void VehilceService_GetVehicleById_AsUser_WithInvalidId_ReturnsException() {}
 
 }
