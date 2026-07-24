@@ -10,16 +10,17 @@ import jz.pk.evcm.exception.ForbiddenAccessException;
 import jz.pk.evcm.repository.UserRepository;
 import jz.pk.evcm.repository.VehicleRepository;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class VehicleService {
 
     private final VehicleRepository vehicleRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     public List<VehicleResponse> getAllVehicles(String userEmail, boolean isAdmin, String targetUserEmail) {
         List<Vehicle> vehicles;
@@ -54,7 +55,7 @@ public class VehicleService {
         boolean isAdminCreatingOnBehalf = isAdmin && targetUserEmail != null && !targetUserEmail.isBlank();
         String ownerEmail = isAdminCreatingOnBehalf ? targetUserEmail : currentUserEmail;
 
-        User owner = userRepository.findByEmail(ownerEmail).orElseThrow(EntityNotFoundException::new);
+        User owner = userService.getUserByEmail(ownerEmail);
 
         Vehicle newVehicle = new Vehicle();
         newVehicle.setBrand(dto.brand());
@@ -87,7 +88,7 @@ public class VehicleService {
     public VehicleResponse selectVehicle(Long vehicleId, String userEmail, boolean isAdmin) {
 
         Vehicle vehicle = getAccessibleVehicle(vehicleId, userEmail, isAdmin);
-        User owner = userRepository.findByEmail(userEmail).orElseThrow(EntityNotFoundException::new);
+        User owner = userService.getUserByEmail(userEmail);
         owner.setSelectedVehicle(vehicle);
         return new VehicleResponse(vehicle);
     }
