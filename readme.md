@@ -67,6 +67,7 @@ To execute the test suite (which uses an in-memory H2 database):
 ```
 
 ## Architecture
+<img width="1806" height="980" alt="image" src="https://github.com/user-attachments/assets/e1b687a8-e257-4735-b0b9-b5ff83c29b2f" />
 
 ## API Documentation
 
