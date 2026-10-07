@@ -1,7 +1,13 @@
 package jz.pk.evcm.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
@@ -22,8 +28,6 @@ public class Connection {
 
     @Enumerated(EnumType.STRING)
     private CurrentType currentType;
-
-
 
 
 }
