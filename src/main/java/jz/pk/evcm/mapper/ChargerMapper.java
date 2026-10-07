@@ -23,12 +23,8 @@ public interface ChargerMapper {
         if (dto == null)
             return null;
 
-        Connection connection = new Connection();
-        connection.setId(dto.id());
-        connection.setAmps(dto.amps());
-        connection.setVoltage(dto.voltage());
-        connection.setPowerKW(dto.powerKW());
-        connection.setQuantity(dto.quantity());
+        Connection connection =
+                Connection.builder().id(dto.id()).amps(dto.amps()).voltage(dto.voltage()).powerKW(dto.powerKW()).quantity(dto.quantity()).build();
 
         ConnectorType mappedConnector = dto.connectionType() != null
                 ? ConnectorType.fromTitle(dto.connectionType().title())
