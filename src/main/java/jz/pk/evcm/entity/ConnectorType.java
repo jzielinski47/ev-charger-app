@@ -18,11 +18,11 @@ public enum ConnectorType {
     }
 
     public static ConnectorType fromTitle(String title) {
-        if(title == null)
+        if (title == null)
             return UNKNOWN;
 
-        for(ConnectorType type : values()) {
-            if(type.label.equalsIgnoreCase(title.trim())) {
+        for (ConnectorType type : values()) {
+            if (type.label.equalsIgnoreCase(title.trim())) {
                 return type;
             }
         }
