@@ -56,7 +56,7 @@ public class AppConfig {
              {
                 System.out.println("Instantiating default system users during server startup...");
 
-                if (userRepository.existsByEmail(adminEmail)) {
+                if (!userRepository.existsByEmail(adminEmail)) {
 
                     User admin = User.builder()
                             .email(adminEmail)

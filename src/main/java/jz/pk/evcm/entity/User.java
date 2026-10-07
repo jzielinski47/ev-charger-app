@@ -32,6 +32,8 @@ public class User implements UserDetails {
 
     @Column(nullable = false)
     private String password;
+
+    @Builder.Default
     private Boolean isNonLocked = true;
 
     @ElementCollection(fetch = FetchType.EAGER)
@@ -41,6 +43,7 @@ public class User implements UserDetails {
     )
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
+    @Builder.Default
     private Set<UserRole> roles = new HashSet<>();
 
     @CreationTimestamp
@@ -51,6 +54,7 @@ public class User implements UserDetails {
     @Column(name = "updated_at")
     private Date updatedAt;
 
+    @Builder.Default
     @OneToMany(mappedBy = "owner")
     private Set<Vehicle> userVehicles = new HashSet<>();
 
