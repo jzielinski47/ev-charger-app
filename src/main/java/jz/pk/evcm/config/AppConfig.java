@@ -52,9 +52,8 @@ public class AppConfig {
     @Bean
     public CommandLineRunner seedDefaultUsers(@Value("${admin.email}") String adminEmail,
                                               @Value("${admin.password}") String adminPassword) {
-        return new CommandLineRunner() {
-            @Override
-            public void run(String... args) throws Exception {
+        return (args) ->
+             {
                 System.out.println("Instantiating default users during server startup...");
 
                 if (userRepository.findByEmail(adminEmail).isEmpty()) {
@@ -73,8 +72,7 @@ public class AppConfig {
                 } else {
                     System.out.println("Admin user already exists.");
                 }
+            };
 
-            }
-        };
     }
 }
