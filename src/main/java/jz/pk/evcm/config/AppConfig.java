@@ -54,15 +54,17 @@ public class AppConfig {
                                               @Value("${admin.password}") String adminPassword) {
         return (args) ->
              {
-                System.out.println("Instantiating default users during server startup...");
+                System.out.println("Instantiating default system users during server startup...");
 
-                if (userRepository.findByEmail(adminEmail).isEmpty()) {
+                if (userRepository.existsByEmail(adminEmail)) {
 
-                     User admin = new User();
-                     admin.setEmail(adminEmail);
-                     admin.setName("admin");
-                     admin.setSurname("admin");
-                     admin.setPassword(passwordEncoder().encode(adminPassword));
+                    User admin = User.builder()
+                            .email(adminEmail)
+                            .name("admin")
+                            .surname("admin")
+                            .password(passwordEncoder().encode(adminPassword))
+                            .build();
+
                      admin.assignRole(UserRole.USER);
                      admin.assignRole(UserRole.ADMIN);
 
@@ -70,7 +72,7 @@ public class AppConfig {
 
                     System.out.println("Admin user created: " + adminEmail);
                 } else {
-                    System.out.println("Admin user already exists.");
+                    System.out.println("Admin user already exists in the system.");
                 }
             };
 
