@@ -42,6 +42,7 @@ public interface ChargerMapper {
             };
         }
         connection.setCurrentType(validCurrentType);
+        // TODO: set ChargerPoint for each connection it belongs to
 
         return connection;
     }
