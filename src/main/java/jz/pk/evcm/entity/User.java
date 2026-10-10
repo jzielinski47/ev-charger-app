@@ -58,14 +58,6 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "owner")
     private Set<Vehicle> userVehicles = new HashSet<>();
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "selected_vehicle_id")
-    private Vehicle selectedVehicle;
-
-    public Optional<Vehicle> getSelectedVehicle() {
-        return Optional.ofNullable(selectedVehicle);
-    }
-
     public Set<UserRole> assignRole(UserRole role) {
         roles.add(role);
         return roles;
