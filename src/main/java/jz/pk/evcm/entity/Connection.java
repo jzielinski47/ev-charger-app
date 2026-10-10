@@ -1,9 +1,6 @@
 package jz.pk.evcm.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
@@ -16,6 +13,11 @@ public class Connection {
 
     @Id
     private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "charger_point_id")
+    private ChargerPoint chargerPoint;
+
     private Integer amps;
     private Integer voltage;
     private Double powerKW;

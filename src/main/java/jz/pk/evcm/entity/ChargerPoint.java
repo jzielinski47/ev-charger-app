@@ -13,14 +13,14 @@ import java.util.List;
 public class ChargerPoint {
 
     @Id
-    private Long id;
+    @Column(name = "charger_point_id")
+    private Long chargerPointId;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "address_info_id")
     private AddressInfo addressInfo;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "charger_point_id")
+    @OneToMany(mappedBy = "chargerPoint", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Connection> connections;
 
 }
