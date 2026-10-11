@@ -1,4 +1,4 @@
-package jz.pk.evcm.controller;
+package jz.pk.evcm.controller.app;
 
 import jz.pk.evcm.dto.req.local.VehicleRequest;
 import jz.pk.evcm.dto.res.VehicleResponse;

@@ -1,4 +1,4 @@
-package jz.pk.evcm.controller;
+package jz.pk.evcm.controller.app;
 
 import jakarta.validation.Valid;
 import jz.pk.evcm.dto.req.local.LoginUserDto;

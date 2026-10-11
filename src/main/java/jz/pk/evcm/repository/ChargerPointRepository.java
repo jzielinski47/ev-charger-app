@@ -9,6 +9,9 @@ import java.util.List;
 
 public interface ChargerPointRepository extends JpaRepository<ChargerPoint, Long> {
 
+    /*
+    * Spatial Query custom construction
+    * */
     @Query("SELECT cp FROM ChargerPoint cp " +
             "LEFT JOIN FETCH cp.connections " +
             "LEFT JOIN FETCH cp.addressInfo " +

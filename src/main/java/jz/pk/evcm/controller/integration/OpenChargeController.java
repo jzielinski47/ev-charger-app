@@ -1,4 +1,4 @@
-package jz.pk.evcm.controller;
+package jz.pk.evcm.controller.integration;
 
 import jz.pk.evcm.dto.req.ocm.ChargerPointRequest;
 import jz.pk.evcm.service.OpenChargeApiService;

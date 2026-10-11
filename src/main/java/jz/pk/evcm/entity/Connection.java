@@ -8,10 +8,16 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Connection {
 
     @Id
     private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "charger_point_id")
+    private ChargerPoint chargerPoint;
+
     private Integer amps;
     private Integer voltage;
     private Double powerKW;
@@ -22,8 +28,6 @@ public class Connection {
 
     @Enumerated(EnumType.STRING)
     private CurrentType currentType;
-
-
 
 
 }

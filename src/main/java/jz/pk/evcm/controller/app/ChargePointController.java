@@ -1,4 +1,4 @@
-package jz.pk.evcm.controller;
+package jz.pk.evcm.controller.app;
 
 import jz.pk.evcm.dto.res.ChargerPointResponse;
 import jz.pk.evcm.service.LocalChargePointService;
