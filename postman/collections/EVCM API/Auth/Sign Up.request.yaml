@@ -1,5 +1,4 @@
 $kind: http-request
-name: Sign Up
 method: POST
 url: "{{baseUrl}}/api/auth/signup"
 auth:
@@ -12,7 +11,7 @@ body:
     {
       "name": "John",
       "surname": "Doe",
-      "email": "john.doe@z.com",
-      "password": "zaq1"
+      "email": "json@json.com",
+      "password": "zaq1@WSX"
     }
 order: 1000
