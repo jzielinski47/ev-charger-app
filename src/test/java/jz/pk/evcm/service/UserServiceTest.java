@@ -1,17 +1,19 @@
 package jz.pk.evcm.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import jz.pk.evcm.entity.User;
 import jz.pk.evcm.repository.UserRepository;
-
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
@@ -23,19 +25,25 @@ public class UserServiceTest {
     private UserService userService;
 
     @Test
-    public void UserService_getUserByEmail() {
+    void getUserByEmail_whenUserExists_returnsUser() {
+        // arrange
+        String email = "john@snow.got";
+        User user = new User();
+        user.setEmail(email);
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
 
-        String searchedUserEmail = "john@snow.got";
-        User mockUser = new User();
-        mockUser.setEmail(searchedUserEmail);
+        // act
+        User result = userService.getUserByEmail(email);
 
-        Mockito.when(userRepository.findByEmail(searchedUserEmail)).thenReturn(Optional.of(mockUser));
+        // assert
+        assertThat(result).isSameAs(user);
+    }
 
-        User result = userService.getUserByEmail(searchedUserEmail);
+    @Test
+    void getUserByEmail_whenUserMissing_throwsException() {
+        when(userRepository.findByEmail("x@y.z")).thenReturn(Optional.empty());
 
-        Assertions.assertThat(result).isNotNull();
-        Assertions.assertThat(result).isExactlyInstanceOf(User.class);
-        Assertions.assertThat(result.getEmail()).isEqualTo(searchedUserEmail);
-        Mockito.verify(userRepository, Mockito.times(1)).findByEmail(searchedUserEmail);
+        assertThatThrownBy(() -> userService.getUserByEmail("x@y.z"))
+                .isInstanceOf(EntityNotFoundException.class);
     }
 }
