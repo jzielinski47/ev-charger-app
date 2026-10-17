@@ -6,10 +6,16 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
+
+import javax.sql.DataSource;
+import java.sql.SQLException;
 import java.time.Year;
 import java.util.List;
 
@@ -19,14 +25,22 @@ import static jz.pk.evcm.testdata.TestVehicleDefaults.aVehicleOwnedBy;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-@DataJpaTest
-@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
+@DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Testcontainers
 public class VehicleRepositoryTest {
+
+    @Container
+    @ServiceConnection
+    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine");
 
     @Autowired
     private VehicleRepository vehicleRepository;
     @Autowired
     private TestEntityManager em;
+
+    @Autowired
+    private DataSource ds;
 
     private User persistUser(String email) {
         return em.persist(User.builder().email(email).name("name").surname("sur").password("1234").build());
@@ -36,7 +50,7 @@ public class VehicleRepositoryTest {
     class Mapping {
 
         @Test
-        void persistsAllFieldsAndConnectors() {
+        void persistsAllFieldsAndConnectors() throws SQLException {
             Vehicle vehicle = aVehicle().supportedConnectorTypes(List.of(TYPE_1, TYPE_2_TETHERED, CCS2)).build();
 
             Vehicle insertedVehicle = vehicleRepository.save(vehicle);
