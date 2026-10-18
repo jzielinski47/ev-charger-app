@@ -54,7 +54,3 @@ tasks.withType<Test> {
     useJUnitPlatform()
     jvmArgs("-XX:+EnableDynamicAgentLoading", "-Xshare:off")
 }
-
-tasks.withType<JavaCompile> {
-    options.compilerArgs.add("-Xlint:deprecation")
-}
