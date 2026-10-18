@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "jz.pk"
-version = "1.0.0 SE"
+version = "1.0.0"
 description = "EVCM"
 
 java {
@@ -55,6 +55,10 @@ tasks.withType<Test> {
     jvmArgs("-XX:+EnableDynamicAgentLoading", "-Xshare:off")
 }
 
-tasks.withType<JavaCompile> {
-    options.compilerArgs.add("-Xlint:deprecation")
+tasks.bootJar {
+    archiveFileName.set("evcm-app.jar")
+}
+
+tasks.jar {
+    enabled = false
 }
