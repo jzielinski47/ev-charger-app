@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "jz.pk"
-version = "1.0.0 SE"
+version = "1.0.0"
 description = "EVCM"
 
 java {
@@ -53,4 +53,12 @@ dependencies {
 tasks.withType<Test> {
     useJUnitPlatform()
     jvmArgs("-XX:+EnableDynamicAgentLoading", "-Xshare:off")
+}
+
+tasks.bootJar {
+    archiveFileName.set("evcm-app.jar")
+}
+
+tasks.jar {
+    enabled = false
 }
