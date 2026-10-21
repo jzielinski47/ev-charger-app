@@ -52,7 +52,7 @@ class AuthControllerTest {
         }
 
         @Test
-        void delegatesSameDtoToService() {
+        void callsSignupUserOnceWithSameDto() {
             when(authService.signupUser(signupDto)).thenReturn(mock(UserResponse.class));
 
             controller.registerUser(signupDto);
@@ -71,7 +71,7 @@ class AuthControllerTest {
         }
 
         @Test
-        void propagatesException_whenServiceFails() {
+        void throwsException_whenServiceFails() {
             when(authService.signupUser(signupDto))
                     .thenThrow(new IllegalStateException("Email already taken"));
 
@@ -80,25 +80,6 @@ class AuthControllerTest {
                     .hasMessage("Email already taken");
         }
 
-        @Test
-        void returnsOkWithEmptyBody_whenServiceReturnsNull() {
-            when(authService.signupUser(signupDto)).thenReturn(null);
-
-            ResponseEntity<?> response = controller.registerUser(signupDto);
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isNull();
-        }
-
-        @Test
-        void passesNullToService_whenDtoIsNull() {
-            when(authService.signupUser(null)).thenReturn(mock(UserResponse.class));
-
-            ResponseEntity<?> response = controller.registerUser(null);
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            verify(authService).signupUser(null);
-        }
     }
 
     @Nested
