@@ -1,10 +1,10 @@
-# EV Charger App - Backend
+# EV Charger Map - Backend
 
 **Author:** Jakub Zieliński
 
 EV Charger Map is being developed as a Bachelor of Engineering Thesis for the Applied Computer Science program at Cracow University of Technology.
 
-This repository contains the backend service of the application. Currently, it provides an API to fetch EV charging stations, manage system users and their personal vehicles.
+This repository contains the backend service of the application. Currently, it provides an API to fetch EV charging stations, manage system users and their personal vehicles. The project is still under heavy development so many changes may occur between versions. Expect updates.
 
 ## Key Features:
 - **Secure Access & Roles:** Implemented JWT authentication with Role-Based Access Control (RBAC) to ensure data privacy and secure admin-only endpoints.
@@ -16,7 +16,7 @@ This repository contains the backend service of the application. Currently, it p
 
 ## Technology Stack
 
-- **Core:** Java 21 LTS, Spring Boot
+- **Core:** Java 21 LTS, Spring Boot 4.1
 - **Build Tool:** Gradle (Kotlin DSL)
 - **Database:** PostgreSQL 16 (Alpine Based Docker image), also used for tests via Testcontainers
 - **API:** REST (Spring WebMVC), GraphQL
@@ -24,7 +24,7 @@ This repository contains the backend service of the application. Currently, it p
 - **Mapping & Boilerplate:** MapStruct, Lombok
 - **Data Access:** Spring Data JPA
 - **Infrastructure:** Docker & Docker Compose
-- **Test Coverage:** JUnit 5, Mockito
+- **Test Coverage:** JUnit 5, Mockito, Testcontainers, Github Actions CI pipeline
 
 ## Getting Started
 
@@ -43,24 +43,18 @@ OPEN_CHARGE_API_KEY=open_charge_api_generated_key
 
 JWT_SECRET_KEY=jwt_secret_key
 JWT_EXP_TIME=3600000
+BACKEND_PORT=8080
 ```
-### 2. Database Setup
-The project uses a PostgreSQL database. You can start the database container using Docker Compose:
+### 2. Running the Application
+Once the .env file is ready you can run the entire application by a single command thanks to docker compose. It will start two containers: server and the database.
+The project uses a PostgreSQL database with PostGIS extension (delivered via docker image based on alpine). You can start the app with a single command:
 
 ```bash
 docker-compose up -d
 ```
-(Note: The project includes the spring-boot-docker-compose dependency, which allows Spring Boot to automatically manage the Docker Compose lifecycle during startup).
-
-### 3. Running the Application
-Once the .env file is ready and the database is configured, start the application using the Gradle wrapper:
-
-```bash
-set -a && source .env && set +a && ./gradlew bootRun
-```
 
 ### 4. Running Tests
-To execute the test suite (which uses an in-memory H2 database):
+To execute the test suite run the following command:
 
 ```bash
 ./gradlew test
