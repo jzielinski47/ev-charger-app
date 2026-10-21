@@ -2,6 +2,7 @@ package jz.pk.evcm.repository;
 
 import jz.pk.evcm.entity.User;
 import jz.pk.evcm.entity.Vehicle;
+import jz.pk.evcm.testdata.TestContainersConfig;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabas
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 
+import org.springframework.context.annotation.Import;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -26,15 +28,10 @@ import static jz.pk.evcm.testdata.TestVehicleDefaults.aVehicleOwnedBy;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-@DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
+@DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Testcontainers
+@Import(TestContainersConfig.class)
 public class VehicleRepositoryTest {
-
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer postgres = new PostgreSQLContainer(DockerImageName.parse("postgis/postgis:16-3.5-alpine")
-            .asCompatibleSubstituteFor("postgres"));
 
     @Autowired
     private VehicleRepository vehicleRepository;
