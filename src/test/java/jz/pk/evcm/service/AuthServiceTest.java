@@ -5,6 +5,7 @@ import jz.pk.evcm.dto.req.local.SignupUserDto;
 import jz.pk.evcm.dto.res.UserResponse;
 import jz.pk.evcm.entity.User;
 import jz.pk.evcm.entity.UserRole;
+import jz.pk.evcm.exception.EmailAlreadyExistsException;
 import jz.pk.evcm.repository.UserRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -73,27 +75,20 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void AuthService_signupExistingEmail_ReturnException() {
-        SignupUserDto dto = new SignupUserDto(
-                "Name",
-                "Surname",
-                "test@test.test",
-                "password");
-
+    void throwsEmailAlreadyExistsException_whenEmailIsTaken() {
+        SignupUserDto dto = new SignupUserDto("Name", "Surname", "test@test.test", "password");
         User existingUser = new User();
         existingUser.setEmail(dto.email());
 
         when(userRepository.findByEmail(dto.email())).thenReturn(Optional.of(existingUser));
 
-        ResponseStatusException exception = org.junit.jupiter.api.Assertions.assertThrows(
-                ResponseStatusException.class, () -> authService.signupUser(dto)
-        );
+        assertThatThrownBy(() -> authService.signupUser(dto))
+                .isInstanceOf(EmailAlreadyExistsException.class)
+                .hasMessage("User with this email already exists.");
 
-        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
-        assertEquals("User with this email already exists.", exception.getReason());
-        verify(userRepository, times(1)).findByEmail(dto.email());
-        verify(passwordEncoder, never()).encode(anyString());
-        verify(userRepository, never()).save(any(User.class));
+        verify(userRepository).findByEmail(dto.email());
+        verifyNoMoreInteractions(userRepository);
+        verifyNoInteractions(passwordEncoder);
     }
 
     @Test
