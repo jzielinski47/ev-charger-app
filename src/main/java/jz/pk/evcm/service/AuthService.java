@@ -7,6 +7,7 @@ import jz.pk.evcm.dto.req.local.SignupUserDto;
 import jz.pk.evcm.dto.res.UserResponse;
 import jz.pk.evcm.entity.User;
 import jz.pk.evcm.entity.UserRole;
+import jz.pk.evcm.exception.EmailAlreadyExistsException;
 import jz.pk.evcm.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,7 +32,7 @@ public class AuthService {
     public UserResponse signupUser(SignupUserDto inputDto) {
 
         if (userRepository.findByEmail(inputDto.email()).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "User with this email already exists.");
+            throw new EmailAlreadyExistsException("User with this email already exists.");
         }
 
         User user = new User();
