@@ -1,6 +1,7 @@
 package jz.pk.evcm.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import jz.pk.evcm.dto.req.local.LoginUserDto;
 import jz.pk.evcm.dto.req.local.SignupUserDto;
 import jz.pk.evcm.dto.res.UserResponse;
@@ -26,6 +27,7 @@ public class AuthService {
         this.authManager = authManager;
     }
 
+    @Transactional
     public UserResponse signupUser(SignupUserDto inputDto) {
 
         if (userRepository.findByEmail(inputDto.email()).isPresent()) {
