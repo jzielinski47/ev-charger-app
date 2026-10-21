@@ -1,7 +1,6 @@
 name: CI
 
 on:
-  push:
   pull_request:
 
 jobs:
@@ -20,4 +19,4 @@ jobs:
 
       - run: chmod +x gradlew
 
-      - run: ./gradlew test
+      - run: ./gradlew --configuration-cache test
