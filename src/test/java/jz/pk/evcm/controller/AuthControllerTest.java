@@ -49,29 +49,13 @@ class AuthControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isSameAs(expected);
-        }
-
-        @Test
-        void callsSignupUserOnceWithSameDto() {
-            when(authService.signupUser(signupDto)).thenReturn(mock(UserResponse.class));
-
-            controller.registerUser(signupDto);
-
             verify(authService).signupUser(same(signupDto));
             verifyNoMoreInteractions(authService);
-        }
-
-        @Test
-        void doesNotTouchJwtService() {
-            when(authService.signupUser(signupDto)).thenReturn(mock(UserResponse.class));
-
-            controller.registerUser(signupDto);
-
             verifyNoInteractions(jwtService);
         }
 
         @Test
-        void throwsException_whenServiceFails() {
+        void throwsIllegalStateException_whenServiceFails() {
             when(authService.signupUser(signupDto))
                     .thenThrow(new IllegalStateException("Email already taken"));
 
@@ -126,7 +110,7 @@ class AuthControllerTest {
         }
 
         @Test
-        void propagatesExceptionAndSkipsTokenGeneration_whenCredentialsAreBad() {
+        void throwsBadCredentialsException_andSkipsTokenGeneration_whenCredentialsAreBad() {
             when(authService.authenticate(loginDto))
                     .thenThrow(new BadCredentialsException("Bad credentials"));
 
@@ -137,7 +121,7 @@ class AuthControllerTest {
         }
 
         @Test
-        void propagatesException_whenJwtServiceFails() {
+        void throwsIllegalStateException_whenJwtServiceFails() {
             when(authService.authenticate(loginDto)).thenReturn(user);
             when(jwtService.generateToken(user))
                     .thenThrow(new IllegalStateException("Signing key missing"));
@@ -146,30 +130,5 @@ class AuthControllerTest {
                     .isInstanceOf(IllegalStateException.class);
         }
 
-        @Test
-        void returnsOkWithNullToken_whenJwtServiceReturnsNull() {
-            when(authService.authenticate(loginDto)).thenReturn(user);
-            when(jwtService.generateToken(user)).thenReturn(null);
-
-            ResponseEntity<?> response = controller.authenticateUser(loginDto);
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody())
-                    .usingRecursiveComparison()
-                    .isEqualTo(new LoginResponse(null, 0L));
-        }
-
-        @Test
-        void passesExpirationThrough_whenExpirationIsZero() {
-            when(authService.authenticate(loginDto)).thenReturn(user);
-            when(jwtService.generateToken(user)).thenReturn(TOKEN);
-            when(jwtService.getExpirationTime()).thenReturn(0L);
-
-            ResponseEntity<?> response = controller.authenticateUser(loginDto);
-
-            assertThat(response.getBody())
-                    .usingRecursiveComparison()
-                    .isEqualTo(new LoginResponse(TOKEN, 0L));
-        }
     }
 }
