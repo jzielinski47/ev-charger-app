@@ -1,5 +1,6 @@
 package jz.pk.evcm.service;
 
+import jakarta.transaction.Transactional;
 import jz.pk.evcm.dto.req.ocm.ChargerPointRequest;
 import jz.pk.evcm.entity.ChargerPoint;
 import jz.pk.evcm.mapper.ChargerMapper;
@@ -55,6 +56,7 @@ public class OpenChargeApiService implements OpenChargeApiContract {
                 });
     }
 
+    @Transactional
     public List<ChargerPointRequest> fetchChargersAndSave(
             Double latitude,
             Double longitude,
@@ -71,6 +73,12 @@ public class OpenChargeApiService implements OpenChargeApiContract {
         List<ChargerPoint> chargerEntities = fetchedChargers.stream()
                 .map(chargerMapper::toEntity)
                 .toList();
+
+        List<Long> ids = chargerEntities.stream()
+                .map(ChargerPoint::getId)
+                .toList();
+
+        chargerPointRepository.findAllById(ids); // for JPA context loading
 
         chargerPointRepository.saveAll(chargerEntities);
 
