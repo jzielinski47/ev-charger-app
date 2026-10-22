@@ -11,8 +11,7 @@ This repository contains the backend service of the application. Currently, it p
 - **Proximity Search:** Built spatial queries (via PostGIS and Hibernate-Spatial) leveraging database spatial indexing to help users instantly find nearby EV charging stations.
 - **Personalized Garage Management:** Developed CRUD operations allowing users to easily add, manage, and set an active vehicle.
 - **Hybrid API Architecture:** Utilized GraphQL for flexible, high-performance charger data retrieval, alongside REST APIs for authentication and vehicle management.
-- **Optimized Data Caching:** Integrated the OpenChargeAPI to automatically fetch and store charger data locally, ensuring fast and reliable query responses without hitting external API limits.
-  
+- **Scheduled Replication (ChargerSync):** Automated a three-hour background sync of OpenChargeAPI data for major Polish cities. Routing client queries directly to this local database eliminates third-party network latency and completely bypasses external rate limits.
 
 ## Technology Stack
 
