@@ -24,6 +24,8 @@ public class Vehicle {
     private String brand;
     private String model;
     private Year yearOfProduction;
+
+    @Enumerated(EnumType.STRING)
     private VehicleOriginatingMarket vehicleOriginatingMarket;
 
     @ElementCollection(targetClass = ConnectorType.class)
