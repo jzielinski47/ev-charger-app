@@ -2,6 +2,7 @@ package jz.pk.evcm.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.util.List;
 
@@ -20,6 +21,7 @@ public class ChargerPoint {
     @JoinColumn(name = "address_info_id")
     private AddressInfo addressInfo;
 
+    @BatchSize(size = 100)
     @OneToMany(mappedBy = "chargerPoint", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Connection> connections;
 
