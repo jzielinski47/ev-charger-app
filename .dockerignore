@@ -6,3 +6,5 @@ build
 postman
 .env
 .env.*
+Claude.md
+docs/plans/
