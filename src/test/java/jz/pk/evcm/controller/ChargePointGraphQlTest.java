@@ -177,6 +177,29 @@ class ChargePointGraphQlTest {
     }
 
     @Test
+    void invalidTokenWithoutVehicleId_getsResultsAsAnonymous() {
+        long ccs2 = saveChargerNearKrakow(0.01, CCS2);
+        HttpGraphQlTester invalidToken = graphQlTester.mutate()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer not-a-jwt")
+                .build();
+
+        queryProximity(invalidToken, null)
+                .path("allChargerPointsInProximity[*].id").entityList(Long.class)
+                .containsExactly(ccs2);
+    }
+
+    @Test
+    void invalidTokenWithVehicleId_isRejectedAsUnauthorized() {
+        long vehicleId = saveVehicle(saveUser("owner@test.dev"), VehicleInlet.CCS2);
+        HttpGraphQlTester invalidToken = graphQlTester.mutate()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer not-a-jwt")
+                .build();
+
+        assertSingleError(queryProximity(invalidToken, vehicleId),
+                ErrorType.UNAUTHORIZED, "Vehicle filter requires authentication");
+    }
+
+    @Test
     void otherUsersVehicle_isRejectedSameAsMissingVehicle() {
         long vehicleId = saveVehicle(saveUser("owner@test.dev"), VehicleInlet.CCS2);
         HttpGraphQlTester otherUser = authenticatedAs(saveUser("other@test.dev"));
