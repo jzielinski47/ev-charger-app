@@ -114,4 +114,29 @@ class ChargerPointRepositoryTest {
         }
     }
 
+    @Nested
+    class SpatialIndexTests {
+
+        @Test
+        void flywayCreatedGistIndexOnLocation() {
+            Object indexDef = entityManager.getEntityManager()
+                    .createNativeQuery("SELECT indexdef FROM pg_indexes WHERE indexname = 'idx_address_info_location'")
+                    .getSingleResult();
+
+            assertThat(indexDef.toString()).containsIgnoringCase("USING gist (location)");
+        }
+
+        @Test
+        void dwithinPrefilterCanUseGistIndex() {
+            entityManager.getEntityManager().createNativeQuery("SET LOCAL enable_seqscan = off").executeUpdate();
+
+            @SuppressWarnings("unchecked")
+            List<String> plan = entityManager.getEntityManager().createNativeQuery("""
+                    EXPLAIN SELECT * FROM address_info
+                    WHERE ST_DWithin(location, ST_SetSRID(ST_MakePoint(19.94, 50.06), 4326), 0.5)
+                    """).getResultList();
+
+            assertThat(String.join("\n", plan)).contains("idx_address_info_location");
+        }
+    }
 }
