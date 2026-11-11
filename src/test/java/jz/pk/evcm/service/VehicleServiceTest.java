@@ -3,26 +3,34 @@ package jz.pk.evcm.service;
 import jakarta.persistence.EntityNotFoundException;
 import jz.pk.evcm.dto.req.local.VehicleRequest;
 import jz.pk.evcm.dto.res.VehicleResponse;
+import jz.pk.evcm.entity.User;
 import jz.pk.evcm.entity.Vehicle;
+import jz.pk.evcm.entity.VehicleInlet;
 import jz.pk.evcm.exception.ForbiddenAccessException;
 import jz.pk.evcm.repository.VehicleRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Year;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @ExtendWith(MockitoExtension.class)
 public class VehicleServiceTest {
 
     @Mock
     private VehicleRepository vehicleRepository;
+
+    @Mock
+    private UserService userService;
 
     @InjectMocks
     private VehicleService vehicleService;
@@ -231,24 +239,86 @@ public class VehicleServiceTest {
      * tested method VehicleResponse addVehicle(VehicleRequest dto, String currentUserEmail, boolean isAdmin, String targetUserEmail)
      */
 
+    private static final VehicleRequest ADD_REQUEST = new VehicleRequest(
+            "Hyundai", "Ioniq 5", Year.of(2024), EnumSet.of(VehicleInlet.CCS2));
+
+    private static User userWithEmail(String email) {
+        User user = new User();
+        user.setEmail(email);
+        return user;
+    }
+
+    private Vehicle captureSavedVehicle() {
+        ArgumentCaptor<Vehicle> captor = ArgumentCaptor.forClass(Vehicle.class);
+        Mockito.verify(vehicleRepository).save(captor.capture());
+        return captor.getValue();
+    }
+
+    private void saveReturnsArgument() {
+        Mockito.when(vehicleRepository.save(Mockito.any(Vehicle.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+    }
+
     @Test
     public void VehicleService_AddVehicle_AsUser_CreatesForCurrentUser() {
 
+        String userEmail = "user@test.invalid";
+        User currentUser = userWithEmail(userEmail);
+        Mockito.when(userService.getUserByEmail(userEmail)).thenReturn(currentUser);
+        saveReturnsArgument();
+
+        VehicleResponse result = vehicleService.addVehicle(ADD_REQUEST, userEmail, false, null);
+
+        Vehicle saved = captureSavedVehicle();
+        Assertions.assertThat(saved.getOwner()).isSameAs(currentUser);
+        Assertions.assertThat(saved.getBrand()).isEqualTo("Hyundai");
+        Assertions.assertThat(saved.getModel()).isEqualTo("Ioniq 5");
+        Assertions.assertThat(saved.getYearOfProduction()).isEqualTo(Year.of(2024));
+        Assertions.assertThat(saved.getSupportedInlets()).containsExactly(VehicleInlet.CCS2);
+        Assertions.assertThat(result.supportedInlets()).isEqualTo(Set.of(VehicleInlet.CCS2));
     }
 
     @Test
     public void VehicleService_AddVehicle_AsAdmin_OnBehalfOfUser_CreatesForTargetUser() {
 
+        String adminEmail = "admin@test.invalid";
+        String targetEmail = "target@test.invalid";
+        User targetUser = userWithEmail(targetEmail);
+        Mockito.when(userService.getUserByEmail(targetEmail)).thenReturn(targetUser);
+        saveReturnsArgument();
+
+        vehicleService.addVehicle(ADD_REQUEST, adminEmail, true, targetEmail);
+
+        Assertions.assertThat(captureSavedVehicle().getOwner()).isSameAs(targetUser);
+        Mockito.verify(userService, Mockito.never()).getUserByEmail(adminEmail);
     }
 
     @Test
     public void VehicleService_AddVehicle_AsUser_OnBehalfOfUser_CreatesForCurrentUser() {
 
+        String userEmail = "user@test.invalid";
+        String targetEmail = "target@test.invalid";
+        User currentUser = userWithEmail(userEmail);
+        Mockito.when(userService.getUserByEmail(userEmail)).thenReturn(currentUser);
+        saveReturnsArgument();
+
+        vehicleService.addVehicle(ADD_REQUEST, userEmail, false, targetEmail);
+
+        Assertions.assertThat(captureSavedVehicle().getOwner()).isSameAs(currentUser);
+        Mockito.verify(userService, Mockito.never()).getUserByEmail(targetEmail);
     }
 
     @Test
     public void VehicleService_AddVehicle_WithInvalidUser_ReturnsException() {
 
+        String userEmail = "missing@test.invalid";
+        Mockito.when(userService.getUserByEmail(userEmail)).thenThrow(new EntityNotFoundException());
+
+        Assertions.assertThatThrownBy(() -> {
+            vehicleService.addVehicle(ADD_REQUEST, userEmail, false, null);
+        }).isInstanceOf(EntityNotFoundException.class);
+
+        Mockito.verify(vehicleRepository, Mockito.never()).save(Mockito.any());
     }
 
 }
