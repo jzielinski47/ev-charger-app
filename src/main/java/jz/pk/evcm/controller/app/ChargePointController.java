@@ -19,7 +19,7 @@ public class ChargePointController {
 
     @QueryMapping
     public ChargerPointResponse chargerPointById(@Argument Long id) {
-        return null;
+        return chargePointService.getChargerPointById(id);
     }
 
     @QueryMapping

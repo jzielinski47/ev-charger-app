@@ -39,6 +39,12 @@ public class LocalChargePointService {
         this.vehicleRepository = vehicleRepository;
     }
 
+    public ChargerPointResponse getChargerPointById(Long id) {
+        return chargerPointRepository.findById(id)
+                .map(ChargerPointResponse::fromChargerPoint)
+                .orElseThrow(() -> new EntityNotFoundException("Charger point not found"));
+    }
+
     public List<ChargerPointResponse> getAllChargersInProximity(Double latitude, Double longitude,
                                                                 Double distanceInKm) {
         return getAllChargersInProximity(latitude, longitude, distanceInKm, DEFAULT_MAX_RESULTS, null, null);
