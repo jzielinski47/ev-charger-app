@@ -41,3 +41,8 @@ out/
 ## POSTMAN TESTS
 .postman
 .postman/
+
+## AI tools
+Claude.md
+
+docs/plans/
