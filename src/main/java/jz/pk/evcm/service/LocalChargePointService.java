@@ -24,7 +24,7 @@ import java.util.Set;
 @Transactional(readOnly = true)
 public class LocalChargePointService {
 
-    private static final int DEFAULT_MAX_RESULTS = 100;
+    private static final Limit MAX_RESULTS = Limit.of(100);
     private static final double KM_PER_DEGREE_LAT = 111.32;
     private static final double MAX_LATITUDE_FOR_COS = 89.0;
 
@@ -45,22 +45,15 @@ public class LocalChargePointService {
                 .orElseThrow(() -> new EntityNotFoundException("Charger point not found"));
     }
 
-    public List<ChargerPointResponse> getAllChargersInProximity(Double latitude, Double longitude,
-                                                                Double distanceInKm) {
-        return getAllChargersInProximity(latitude, longitude, distanceInKm, DEFAULT_MAX_RESULTS, null, null);
-    }
-
-    public List<ChargerPointResponse> getAllChargersInProximity(Double latitude, Double longitude,
-                                                                Double distanceInKm, Integer maxResults,
+    public List<ChargerPointResponse> getAllChargersInProximity(double latitude, double longitude, double distanceInKm,
                                                                 Long vehicleId, String ownerEmail) {
         Point userLocation = geometryFactory.createPoint(new Coordinate(longitude, latitude));
         double distanceDeg = kmToDegrees(distanceInKm, latitude);
         double distanceMeters = distanceInKm * 1000;
-        Limit limit = Limit.of(maxResults != null ? maxResults : DEFAULT_MAX_RESULTS);
 
         if (vehicleId == null) {
             return toResponses(chargerPointRepository.findNearbyChargers(
-                    userLocation, distanceDeg, distanceMeters, limit));
+                    userLocation, distanceDeg, distanceMeters, MAX_RESULTS));
         }
 
         Set<ConnectorType> connectorTypes = compatibleConnectorsOfOwnedVehicle(vehicleId, ownerEmail);
@@ -68,7 +61,7 @@ public class LocalChargePointService {
             return List.of();
         }
         return toResponses(chargerPointRepository.findNearbyChargersWithConnectorTypeIn(
-                userLocation, distanceDeg, distanceMeters, connectorTypes, limit));
+                userLocation, distanceDeg, distanceMeters, connectorTypes, MAX_RESULTS));
     }
 
     private Set<ConnectorType> compatibleConnectorsOfOwnedVehicle(Long vehicleId, String ownerEmail) {

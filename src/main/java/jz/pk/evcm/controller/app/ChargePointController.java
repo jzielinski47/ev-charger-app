@@ -27,7 +27,7 @@ public class ChargePointController {
                                                                   @Argument Double proximity, @Argument Long vehicleId,
                                                                   @AuthenticationPrincipal UserDetails principal) {
         String ownerEmail = principal != null ? principal.getUsername() : null;
-        return chargePointService.getAllChargersInProximity(lat, lon, proximity, null, vehicleId, ownerEmail);
+        return chargePointService.getAllChargersInProximity(lat, lon, proximity, vehicleId, ownerEmail);
     }
 
 }

@@ -46,7 +46,7 @@ class LocalChargePointServiceSpatialTest {
     void findsChargerNearEastEdgeOfRadiusAtHighLatitude() {
         persistChargerAt(1L, 1.3134943103101826, 70.00300179266618);
 
-        List<ChargerPointResponse> results = service.getAllChargersInProximity(70.0, 0.0, 50.0);
+        List<ChargerPointResponse> results = service.getAllChargersInProximity(70.0, 0.0, 50.0, null, null);
 
         assertThat(results).extracting(ChargerPointResponse::id).containsExactly(1L);
     }
@@ -55,7 +55,7 @@ class LocalChargePointServiceSpatialTest {
     void excludesChargerJustBeyondRadius() {
         persistChargerAt(1L, 1.33, 70.0); // ~50.6 km east
 
-        List<ChargerPointResponse> results = service.getAllChargersInProximity(70.0, 0.0, 50.0);
+        List<ChargerPointResponse> results = service.getAllChargersInProximity(70.0, 0.0, 50.0, null, null);
 
         assertThat(results).isEmpty();
     }
