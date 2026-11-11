@@ -152,6 +152,30 @@ class ChargePointGraphQlTest {
     }
 
     @Test
+    void chargerAddressFields_areResolvedWithoutErrors() {
+        long chargerId = saveChargerNearKrakow(0.01, CCS2);
+
+        GraphQlTester.Response response = graphQlTester.document("""
+                        query($lat: Float, $lon: Float, $proximity: Float) {
+                          allChargerPointsInProximity(lat: $lat, lon: $lon, proximity: $proximity) {
+                            addressInfo { id latitude longitude }
+                          }
+                        }
+                        """)
+                .variable("lat", KRAKOW_LAT)
+                .variable("lon", KRAKOW_LON)
+                .variable("proximity", RADIUS_KM)
+                .execute();
+
+        response.errors().verify();
+        response.path("allChargerPointsInProximity[0].addressInfo.id").entity(Long.class).isEqualTo(chargerId);
+        response.path("allChargerPointsInProximity[0].addressInfo.latitude").entity(Double.class)
+                .isEqualTo(KRAKOW_LAT + 0.01);
+        response.path("allChargerPointsInProximity[0].addressInfo.longitude").entity(Double.class)
+                .isEqualTo(KRAKOW_LON);
+    }
+
+    @Test
     void ownerWithCcs2Vehicle_getsCompatibleChargers_withAllTheirConnections() {
         User owner = saveUser("owner@test.dev");
         long vehicleId = saveVehicle(owner, VehicleInlet.CCS2);
