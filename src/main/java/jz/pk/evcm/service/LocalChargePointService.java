@@ -28,12 +28,9 @@ public class LocalChargePointService {
         this.chargerPointRepository = chargerPointRepository;
     }
 
-    public List<ChargerPointResponse> getAllChargersInProximity(
-            Double latitude,
-            Double longitude,
-            Double distanceInKm
-    ) {
-        return getAllChargersInProximity(latitude, longitude, distanceInKm, 100);
+    public List<ChargerPointResponse> getAllChargersInProximity(Double latitude, Double longitude,
+                                                                Double distanceInKm) {
+        return getAllChargersInProximity(latitude, longitude, distanceInKm, DEFAULT_MAX_RESULTS);
     }
 
     public List<ChargerPointResponse> getAllChargersInProximity(Double latitude, Double longitude,
