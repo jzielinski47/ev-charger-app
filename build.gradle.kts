@@ -21,6 +21,7 @@ repositories {
 val jjwtVersion = "0.13.0"
 val mapstructVersion = "1.6.3"
 val jtsVersion = "1.20.0"
+val springdocVersion = "3.2.0"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
@@ -28,6 +29,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocVersion")
 
     runtimeOnly("org.postgresql:postgresql")
     implementation("org.hibernate.orm:hibernate-spatial")
