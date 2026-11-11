@@ -18,6 +18,7 @@ public class LocalChargePointService {
 
     private static final int DEFAULT_MAX_RESULTS = 100;
     private static final double KM_PER_DEGREE_LAT = 111.32;
+    private static final double MAX_LATITUDE_FOR_COS = 89.0;
 
     private final ChargerPointRepository chargerPointRepository;
     // set the same coordinate system as GPS (WGS84)
@@ -48,8 +49,8 @@ public class LocalChargePointService {
     }
 
     private static double kmToDegrees(double km, double latitude) {
-        double cosLat = Math.cos(Math.toRadians(latitude));
-        return km / (KM_PER_DEGREE_LAT * Math.max(cosLat, 0.01));
+        double poleward = Math.min(Math.abs(latitude) + km / KM_PER_DEGREE_LAT, MAX_LATITUDE_FOR_COS);
+        return km / (KM_PER_DEGREE_LAT * Math.cos(Math.toRadians(poleward)));
     }
 
 }
