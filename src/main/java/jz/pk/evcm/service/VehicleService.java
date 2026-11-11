@@ -3,7 +3,6 @@ package jz.pk.evcm.service;
 import jakarta.persistence.EntityNotFoundException;
 import jz.pk.evcm.dto.req.local.VehicleRequest;
 import jz.pk.evcm.dto.res.VehicleResponse;
-import jz.pk.evcm.entity.ConnectorType;
 import jz.pk.evcm.entity.User;
 import jz.pk.evcm.entity.Vehicle;
 import jz.pk.evcm.exception.ForbiddenAccessException;
@@ -106,18 +105,6 @@ public class VehicleService {
         }
 
         return vehicle;
-    }
-
-    private ConnectorType mapConnectorType(String connector) {
-        if (connector == null) {
-            return ConnectorType.UNKNOWN;
-        }
-
-        try {
-            return ConnectorType.valueOf(connector);
-        } catch (IllegalArgumentException e) {
-            return ConnectorType.UNKNOWN;
-        }
     }
 
 }
