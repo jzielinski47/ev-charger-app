@@ -1,6 +1,7 @@
 package jz.pk.evcm.dto.req.local;
 
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jz.pk.evcm.entity.VehicleInlet;
 
 import java.time.Year;
@@ -10,5 +11,5 @@ public record VehicleRequest(
         String brand,
         String model,
         Year yearOfProduction,
-        @NotEmpty Set<VehicleInlet> supportedInlets
+        @NotEmpty Set<@NotNull VehicleInlet> supportedInlets
 ) {}
