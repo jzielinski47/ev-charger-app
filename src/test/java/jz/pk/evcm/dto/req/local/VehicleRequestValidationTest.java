@@ -33,7 +33,7 @@ class VehicleRequestValidationTest {
     }
 
     private static Set<ConstraintViolation<VehicleRequest>> validate(Set<VehicleInlet> inlets) {
-        return validator.validate(new VehicleRequest("Kia", "EV6", Year.of(2023), inlets));
+        return validator.validate(new VehicleRequest("Kia", "EV6", Year.of(2023), inlets, null, null, null, null, null));
     }
 
     @Test

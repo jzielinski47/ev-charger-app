@@ -240,7 +240,8 @@ public class VehicleServiceTest {
      */
 
     private static final VehicleRequest ADD_REQUEST = new VehicleRequest(
-            "Hyundai", "Ioniq 5", Year.of(2024), EnumSet.of(VehicleInlet.CCS2));
+            "Hyundai", "Ioniq 5", Year.of(2024), EnumSet.of(VehicleInlet.CCS2),
+            null, null, null, null, null);
 
     private static User userWithEmail(String email) {
         User user = new User();

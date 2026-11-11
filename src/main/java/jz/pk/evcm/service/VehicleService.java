@@ -58,10 +58,7 @@ public class VehicleService {
         User owner = userService.getUserByEmail(ownerEmail);
 
         Vehicle newVehicle = new Vehicle();
-        newVehicle.setBrand(dto.brand());
-        newVehicle.setModel(dto.model());
-        newVehicle.setYearOfProduction(dto.yearOfProduction());
-        newVehicle.setSupportedInlets(dto.supportedInlets());
+        applyRequest(newVehicle, dto);
         newVehicle.setOwner(owner);
 
         Vehicle savedVehicle = vehicleRepository.save(newVehicle);
@@ -73,10 +70,7 @@ public class VehicleService {
 
         Vehicle vehicle = getAccessibleVehicle(vehicleId, currentUserEmail, isAdmin);
 
-        vehicle.setBrand(dto.brand());
-        vehicle.setModel(dto.model());
-        vehicle.setYearOfProduction(dto.yearOfProduction());
-        vehicle.setSupportedInlets(dto.supportedInlets());
+        applyRequest(vehicle, dto);
         Vehicle updatedVehicle = vehicleRepository.save(vehicle);
         return new VehicleResponse(updatedVehicle);
     }
@@ -85,6 +79,18 @@ public class VehicleService {
     public void deleteVehicle(Long vehicleId, String userEmail, boolean isAdmin) {
         Vehicle vehicle = getAccessibleVehicle(vehicleId, userEmail, isAdmin);
         vehicleRepository.delete(vehicle);
+    }
+
+    private static void applyRequest(Vehicle vehicle, VehicleRequest dto) {
+        vehicle.setBrand(dto.brand());
+        vehicle.setModel(dto.model());
+        vehicle.setYearOfProduction(dto.yearOfProduction());
+        vehicle.setSupportedInlets(dto.supportedInlets());
+        vehicle.setVehicleOriginatingMarket(dto.vehicleOriginatingMarket());
+        vehicle.setBatteryCapacityKwh(dto.batteryCapacityKwh());
+        vehicle.setMaxAcPowerKw(dto.maxAcPowerKw());
+        vehicle.setMaxDcPowerKw(dto.maxDcPowerKw());
+        vehicle.setAcPhases(dto.acPhases());
     }
 
     private Vehicle getAccessibleVehicle(Long vehicleId, String currentUserEmail, boolean isAdmin) {
