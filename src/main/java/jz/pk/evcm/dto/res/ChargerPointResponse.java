@@ -29,6 +29,7 @@ public record ChargerPointResponse(
 }
 
 record AddressResponse(
+        Long id,
         String title,
         String addressLine1,
         String town,
@@ -48,6 +49,7 @@ record AddressResponse(
         }
 
         return new AddressResponse(
+                address.getId(),
                 address.getTitle(),
                 address.getAddressLine1(),
                 address.getTown(),
