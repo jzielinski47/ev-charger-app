@@ -5,6 +5,8 @@ import jz.pk.evcm.service.LocalChargePointService;
 import lombok.AllArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 
 import java.util.List;
@@ -21,8 +23,11 @@ public class ChargePointController {
     }
 
     @QueryMapping
-    public List<ChargerPointResponse> allChargerPointsInProximity(@Argument Double lat, @Argument Double lon, @Argument Double proximity) {
-        return chargePointService.getAllChargersInProximity(lat, lon, proximity);
+    public List<ChargerPointResponse> allChargerPointsInProximity(@Argument Double lat, @Argument Double lon,
+                                                                  @Argument Double proximity, @Argument Long vehicleId,
+                                                                  @AuthenticationPrincipal UserDetails principal) {
+        String ownerEmail = principal != null ? principal.getUsername() : null;
+        return chargePointService.getAllChargersInProximity(lat, lon, proximity, null, vehicleId, ownerEmail);
     }
 
 }

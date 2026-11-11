@@ -1,6 +1,6 @@
 type Query {
     chargerPointById(id: ID!): ChargerPoint
-    allChargerPointsInProximity(lat: Float, lon: Float, proximity: Float): [ChargerPoint!]!
+    allChargerPointsInProximity(lat: Float, lon: Float, proximity: Float, vehicleId: ID): [ChargerPoint!]!
 }
 
 type ChargerPoint {
