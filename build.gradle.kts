@@ -24,7 +24,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation("io.jsonwebtoken:jjwt-api:0.13.0")
-    implementation("jakarta.validation:jakarta.validation-api:4.0.0-M1")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.hibernate.orm:hibernate-spatial")
     implementation("org.locationtech.jts:jts-core:1.20.0")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
