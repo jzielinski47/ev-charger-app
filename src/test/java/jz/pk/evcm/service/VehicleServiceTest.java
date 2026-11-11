@@ -6,6 +6,7 @@ import jz.pk.evcm.dto.res.VehicleResponse;
 import jz.pk.evcm.entity.User;
 import jz.pk.evcm.entity.Vehicle;
 import jz.pk.evcm.entity.VehicleInlet;
+import jz.pk.evcm.entity.VehicleOriginatingMarket;
 import jz.pk.evcm.exception.ForbiddenAccessException;
 import jz.pk.evcm.repository.VehicleRepository;
 import org.assertj.core.api.Assertions;
@@ -277,6 +278,31 @@ public class VehicleServiceTest {
         Assertions.assertThat(saved.getYearOfProduction()).isEqualTo(Year.of(2024));
         Assertions.assertThat(saved.getSupportedInlets()).containsExactly(VehicleInlet.CCS2);
         Assertions.assertThat(result.supportedInlets()).isEqualTo(Set.of(VehicleInlet.CCS2));
+    }
+
+    @Test
+    public void VehicleService_AddVehicle_WithSpecs_StoresAndReturnsSpecs() {
+
+        String userEmail = "user@test.invalid";
+        Mockito.when(userService.getUserByEmail(userEmail)).thenReturn(userWithEmail(userEmail));
+        saveReturnsArgument();
+        VehicleRequest request = new VehicleRequest(
+                "Hyundai", "Ioniq 5", Year.of(2024), EnumSet.of(VehicleInlet.CCS2),
+                VehicleOriginatingMarket.EUROPE, 77.4, 11.0, 235.0, 3);
+
+        VehicleResponse result = vehicleService.addVehicle(request, userEmail, false, null);
+
+        Vehicle saved = captureSavedVehicle();
+        Assertions.assertThat(saved.getVehicleOriginatingMarket()).isEqualTo(VehicleOriginatingMarket.EUROPE);
+        Assertions.assertThat(saved.getBatteryCapacityKwh()).isEqualTo(77.4);
+        Assertions.assertThat(saved.getMaxAcPowerKw()).isEqualTo(11.0);
+        Assertions.assertThat(saved.getMaxDcPowerKw()).isEqualTo(235.0);
+        Assertions.assertThat(saved.getAcPhases()).isEqualTo(3);
+        Assertions.assertThat(result.vehicleOriginatingMarket()).isEqualTo(VehicleOriginatingMarket.EUROPE);
+        Assertions.assertThat(result.batteryCapacityKwh()).isEqualTo(77.4);
+        Assertions.assertThat(result.maxAcPowerKw()).isEqualTo(11.0);
+        Assertions.assertThat(result.maxDcPowerKw()).isEqualTo(235.0);
+        Assertions.assertThat(result.acPhases()).isEqualTo(3);
     }
 
     @Test
