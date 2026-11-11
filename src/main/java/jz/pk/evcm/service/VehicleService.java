@@ -12,11 +12,13 @@ import jz.pk.evcm.repository.VehicleRepository;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class VehicleService {
 
     private final VehicleRepository vehicleRepository;
@@ -46,6 +48,7 @@ public class VehicleService {
         return new VehicleResponse(vehicle);
     }
 
+    @Transactional
     public VehicleResponse addVehicle(
             VehicleRequest dto,
             String currentUserEmail,
@@ -68,6 +71,7 @@ public class VehicleService {
         return new VehicleResponse(savedVehicle);
     }
 
+    @Transactional
     public VehicleResponse modifyVehicle(Long vehicleId, VehicleRequest dto, String currentUserEmail, boolean isAdmin) {
 
         Vehicle vehicle = getAccessibleVehicle(vehicleId, currentUserEmail, isAdmin);
@@ -80,6 +84,7 @@ public class VehicleService {
         return new VehicleResponse(updatedVehicle);
     }
 
+    @Transactional
     public void deleteVehicle(Long vehicleId, String userEmail, boolean isAdmin) {
         Vehicle vehicle = getAccessibleVehicle(vehicleId, userEmail, isAdmin);
         vehicleRepository.delete(vehicle);
