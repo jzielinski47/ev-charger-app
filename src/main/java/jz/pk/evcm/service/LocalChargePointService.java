@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class LocalChargePointService {
 
     private static final int DEFAULT_MAX_RESULTS = 100;
@@ -35,7 +36,6 @@ public class LocalChargePointService {
         return getAllChargersInProximity(latitude, longitude, distanceInKm, 100);
     }
 
-    @Transactional(readOnly = true)
     public List<ChargerPointResponse> getAllChargersInProximity(Double latitude, Double longitude,
                                                                 Double distanceInKm, Integer maxResults) {
         Point userLocation = geometryFactory.createPoint(new Coordinate(longitude, latitude));
