@@ -229,7 +229,7 @@ class ChargePointGraphQlTest {
         saveChargerNearKrakow(0.01, CCS2);
 
         assertSingleError(queryProximity(graphQlTester, vehicleId),
-                ErrorType.UNAUTHORIZED, "Vehicle filter requires authentication");
+                ErrorType.UNAUTHORIZED, "Unauthorized");
     }
 
     @Test
@@ -252,7 +252,7 @@ class ChargePointGraphQlTest {
                 .build();
 
         assertSingleError(queryProximity(invalidToken, vehicleId),
-                ErrorType.UNAUTHORIZED, "Vehicle filter requires authentication");
+                ErrorType.UNAUTHORIZED, "Unauthorized");
     }
 
     @Test
