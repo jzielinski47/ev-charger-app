@@ -37,11 +37,11 @@ public interface ChargerPointRepository extends JpaRepository<ChargerPoint, Long
                           WHERE c.chargerPoint = cp AND c.connectorType IN :connectorTypes)
             ORDER BY function('ST_DistanceSphere', a.location, :userLocation)
             """)
-    List<ChargerPoint> findNearbyChargersWithAnyConnectorType(@Param("userLocation") Point userLocation,
-                                                              @Param("distanceDeg") double distanceDeg,
-                                                              @Param("distanceMeters") double distanceMeters,
-                                                              @Param("connectorTypes") Collection<ConnectorType> connectorTypes,
-                                                              Limit limit);
+    List<ChargerPoint> findNearbyChargersWithConnectorTypeIn(@Param("userLocation") Point userLocation,
+                                                             @Param("distanceDeg") double distanceDeg,
+                                                             @Param("distanceMeters") double distanceMeters,
+                                                             @Param("connectorTypes") Collection<ConnectorType> connectorTypes,
+                                                             Limit limit);
 
 
 }

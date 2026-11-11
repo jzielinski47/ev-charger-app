@@ -128,7 +128,7 @@ class ChargerPointRepositoryTest {
     }
 
     @Nested
-    class FindNearbyChargersWithAnyConnectorTypeTests {
+    class FindNearbyChargersWithConnectorTypeInTests {
 
         private Point searchCenter;
 
@@ -137,9 +137,9 @@ class ChargerPointRepositoryTest {
             searchCenter = geometryFactory.createPoint(new Coordinate(0.0, 0.0));
         }
 
-        private List<ChargerPoint> findWithAnyOf(Set<ConnectorType> connectorTypes, int limit) {
+        private List<ChargerPoint> findWithConnectorTypeIn(Set<ConnectorType> connectorTypes, int limit) {
             entityManager.clear();
-            return repository.findNearbyChargersWithAnyConnectorType(
+            return repository.findNearbyChargersWithConnectorTypeIn(
                     searchCenter, COARSE_RADIUS_DEG, TEN_KM, connectorTypes, Limit.of(limit));
         }
 
@@ -149,7 +149,7 @@ class ChargerPointRepositoryTest {
             createChargerAt(0.0, 0.02, CHADEMO);
             createChargerAt(0.0, 0.03);
 
-            List<ChargerPoint> results = findWithAnyOf(Set.of(CCS2), 10);
+            List<ChargerPoint> results = findWithConnectorTypeIn(Set.of(CCS2), 10);
 
             assertThat(results).extracting(ChargerPoint::getId).containsExactly(compatible.getId());
         }
@@ -158,7 +158,7 @@ class ChargerPointRepositoryTest {
         void returnsChargerWithMixedConnectorsOnce_withAllItsConnections() {
             ChargerPoint mixed = createChargerAt(0.0, 0.01, CCS2, CHADEMO, TYPE_2);
 
-            List<ChargerPoint> results = findWithAnyOf(Set.of(CCS2, TYPE_2), 10);
+            List<ChargerPoint> results = findWithConnectorTypeIn(Set.of(CCS2, TYPE_2), 10);
 
             assertThat(results).extracting(ChargerPoint::getId).containsExactly(mixed.getId());
             assertThat(results.getFirst().getConnections())
@@ -173,7 +173,7 @@ class ChargerPointRepositoryTest {
             ChargerPoint middle = createChargerAt(0.0, -0.04, CCS2);
             createChargerAt(0.005, 0.0, CHADEMO);
 
-            List<ChargerPoint> results = findWithAnyOf(Set.of(CCS2, TYPE_2), 10);
+            List<ChargerPoint> results = findWithConnectorTypeIn(Set.of(CCS2, TYPE_2), 10);
 
             assertThat(results).extracting(ChargerPoint::getId)
                     .containsExactly(near.getId(), middle.getId(), far.getId());
@@ -185,7 +185,7 @@ class ChargerPointRepositoryTest {
             ChargerPoint second = createChargerAt(0.0, 0.02, CCS2);
             createChargerAt(0.0, 0.03, CCS2);
 
-            List<ChargerPoint> results = findWithAnyOf(Set.of(CCS2, TYPE_2, TYPE_2_TETHERED), 2);
+            List<ChargerPoint> results = findWithConnectorTypeIn(Set.of(CCS2, TYPE_2, TYPE_2_TETHERED), 2);
 
             assertThat(results).extracting(ChargerPoint::getId)
                     .containsExactly(closest.getId(), second.getId());
@@ -195,7 +195,7 @@ class ChargerPointRepositoryTest {
         void ignoresCompatibleChargerOutsideRadiusInMeters() {
             createChargerAt(0.0, 0.1, CCS2);
 
-            assertThat(findWithAnyOf(Set.of(CCS2), 10)).isEmpty();
+            assertThat(findWithConnectorTypeIn(Set.of(CCS2), 10)).isEmpty();
         }
     }
 
