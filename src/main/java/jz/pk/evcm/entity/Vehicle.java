@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Year;
-import java.util.List;
+import java.util.Set;
 
 @Entity
 @Builder
@@ -28,11 +28,11 @@ public class Vehicle {
     @Enumerated(EnumType.STRING)
     private VehicleOriginatingMarket vehicleOriginatingMarket;
 
-    @ElementCollection(targetClass = ConnectorType.class)
+    @ElementCollection(targetClass = VehicleInlet.class)
     @Enumerated(EnumType.STRING)
-    @CollectionTable(name = "vehicle_connector_types", joinColumns = @JoinColumn(name = "vehicle_id"))
-    @Column(name = "connector_type")
-    private List<ConnectorType> supportedConnectorTypes;
+    @CollectionTable(name = "vehicle_inlets", joinColumns = @JoinColumn(name = "vehicle_id"))
+    @Column(name = "inlet")
+    private Set<VehicleInlet> supportedInlets;
 
     private Double batteryCapacityKwh;
     private Double maxAcPowerKw;

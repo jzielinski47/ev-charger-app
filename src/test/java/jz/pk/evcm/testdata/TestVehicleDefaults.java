@@ -1,12 +1,11 @@
 package jz.pk.evcm.testdata;
 
-import jz.pk.evcm.entity.ConnectorType;
 import jz.pk.evcm.entity.User;
 import jz.pk.evcm.entity.Vehicle;
+import jz.pk.evcm.entity.VehicleInlet;
 
 import java.time.Year;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.EnumSet;
 
 public final class TestVehicleDefaults {
 
@@ -15,7 +14,7 @@ public final class TestVehicleDefaults {
                 .brand("Tesla")
                 .model("Model Y")
                 .yearOfProduction(Year.of(2026))
-                .supportedConnectorTypes(new ArrayList<>(List.of(ConnectorType.CCS2)));
+                .supportedInlets(EnumSet.of(VehicleInlet.CCS2));
     }
 
     public static Vehicle.VehicleBuilder aVehicleOwnedBy(User owner) {

@@ -64,7 +64,7 @@ public class VehicleService {
         newVehicle.setBrand(dto.brand());
         newVehicle.setModel(dto.model());
         newVehicle.setYearOfProduction(dto.yearOfProduction());
-        newVehicle.setSupportedConnectorTypes(dto.supportedConnectorTypes());
+        newVehicle.setSupportedInlets(dto.supportedInlets());
         newVehicle.setOwner(owner);
 
         Vehicle savedVehicle = vehicleRepository.save(newVehicle);
@@ -79,7 +79,7 @@ public class VehicleService {
         vehicle.setBrand(dto.brand());
         vehicle.setModel(dto.model());
         vehicle.setYearOfProduction(dto.yearOfProduction());
-        vehicle.setSupportedConnectorTypes(dto.supportedConnectorTypes());
+        vehicle.setSupportedInlets(dto.supportedInlets());
         Vehicle updatedVehicle = vehicleRepository.save(vehicle);
         return new VehicleResponse(updatedVehicle);
     }

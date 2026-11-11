@@ -14,9 +14,10 @@ import org.springframework.context.annotation.Import;
 import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.time.Year;
+import java.util.EnumSet;
 import java.util.List;
 
-import static jz.pk.evcm.entity.ConnectorType.*;
+import static jz.pk.evcm.entity.VehicleInlet.*;
 import static jz.pk.evcm.testdata.TestVehicleDefaults.aVehicle;
 import static jz.pk.evcm.testdata.TestVehicleDefaults.aVehicleOwnedBy;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,8 +44,8 @@ public class VehicleRepositoryTest {
     class Mapping {
 
         @Test
-        void persistsAllFieldsAndConnectors() throws SQLException {
-            Vehicle vehicle = aVehicle().supportedConnectorTypes(List.of(TYPE_1, TYPE_2_TETHERED, CCS2)).build();
+        void persistsAllFieldsAndInlets() throws SQLException {
+            Vehicle vehicle = aVehicle().supportedInlets(EnumSet.of(TYPE_1, TYPE_2, CCS2)).build();
 
             Vehicle insertedVehicle = vehicleRepository.save(vehicle);
             em.flush();
@@ -56,8 +57,8 @@ public class VehicleRepositoryTest {
             assertThat(reloadedVehicle.getBrand()).isEqualTo("Tesla");
             assertThat(reloadedVehicle.getModel()).isEqualTo("Model Y");
             assertThat(reloadedVehicle.getYearOfProduction()).isEqualTo(Year.of(2026));
-            assertThat(reloadedVehicle.getSupportedConnectorTypes())
-                    .containsExactlyInAnyOrder(TYPE_1, TYPE_2_TETHERED, CCS2);
+            assertThat(reloadedVehicle.getSupportedInlets())
+                    .containsExactlyInAnyOrder(TYPE_1, TYPE_2, CCS2);
         }
     }
 

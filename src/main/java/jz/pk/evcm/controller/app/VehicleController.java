@@ -1,5 +1,6 @@
 package jz.pk.evcm.controller.app;
 
+import jakarta.validation.Valid;
 import jz.pk.evcm.dto.req.local.VehicleRequest;
 import jz.pk.evcm.dto.res.VehicleResponse;
 import jz.pk.evcm.service.VehicleService;
@@ -32,7 +33,7 @@ public class VehicleController {
     @PostMapping
     public VehicleResponse addVehicle(
             Authentication auth,
-            @RequestBody VehicleRequest dto,
+            @Valid @RequestBody VehicleRequest dto,
             @RequestParam(required = false) String targetEmail) {
         return vehicleService.addVehicle(dto, auth.getName(), hasAdminAuthority(auth), targetEmail);
     }
@@ -41,7 +42,7 @@ public class VehicleController {
     public VehicleResponse modifyVehicle(
             Authentication auth,
             @PathVariable Long vehicleId,
-            @RequestBody VehicleRequest dto) {
+            @Valid @RequestBody VehicleRequest dto) {
         return vehicleService.modifyVehicle(vehicleId, dto, auth.getName(), hasAdminAuthority(auth));
     }
 
