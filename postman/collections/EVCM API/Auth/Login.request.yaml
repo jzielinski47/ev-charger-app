@@ -10,15 +10,13 @@ body:
   type: json
   content: |-
     {
-      "email": "john.doe@z.com",
-      "password": "zaq1"
+      "email": "john.doe@example.com",
+      "password": "zaq1@WSX"
     }
 scripts:
   - type: afterResponse
     code: |-
-      const res = pm.response.json();
-      if (res.token) {
-        pm.collectionVariables.set("token", res.token);
-      }
+      pm.test("logged in", () => pm.response.to.have.status(200));
+      pm.collectionVariables.set("token", pm.response.json().token);
     language: text/javascript
 order: 2000

@@ -1,14 +1,9 @@
 $kind: http-request
 name: Modify Vehicle
 method: PUT
-url: '{{baseUrl}}/api/vehicles/{{vehicleId}}'
+url: "{{baseUrl}}/api/vehicles/{{vehicleId}}"
 headers:
-  - key: Content-Type
-    value: application/json
-pathVariables:
-  - key: vehicleId
-    value: '1'
-    description: ID of the vehicle to modify
+  Content-Type: application/json
 body:
   type: json
   content: |-
@@ -16,7 +11,11 @@ body:
       "brand": "Tesla",
       "model": "Model Y",
       "yearOfProduction": 2023,
-      "connector": "CCS",
-      "isConnectorModified": false
+      "supportedInlets": ["CCS2", "TYPE_2"],
+      "vehicleOriginatingMarket": "EUROPE",
+      "batteryCapacityKwh": 75.0,
+      "maxAcPowerKw": 11.0,
+      "maxDcPowerKw": 250.0,
+      "acPhases": 3
     }
 order: 4000

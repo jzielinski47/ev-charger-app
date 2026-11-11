@@ -1,27 +1,29 @@
 $kind: graphql-request
 name: Fetch Local Chargers Near Krakow
+description: Remove vehicleId from variables to list all chargers; with it, only chargers compatible with that vehicle (must belong to the logged-in user).
 url: "{{baseUrl}}/graphql/chargers"
 query: |
-  query AllChargerPointsInProximity {
-      allChargerPointsInProximity(lat: 50.0, proximity: 3.0, lon: 20.0) {
+  query AllChargerPointsInProximity($vehicleId: ID) {
+      allChargerPointsInProximity(lat: 50.0748, lon: 19.9979, proximity: 15.0, vehicleId: $vehicleId) {
           id
           addressInfo {
+              title
               latitude
               longitude
           }
           connections {
               connectorType
               currentType
+              powerKW
           }
       }
   }
-variables: ""
+variables: |-
+  {
+    "vehicleId": "{{vehicleId}}"
+  }
 settings: {}
-auth:
-  type: bearer
-  credentials:
-    token: "{{token}}"
 schema:
   source: file
-  location: /home/jzielinski/SoftwareDevelopment/EVCM/src/main/resources/graphql/schema.graphqls
-order: 3312120582485679
+  location: /home/jzielinski/SoftwareDevelopment/ev-charger-map/src/main/resources/graphql/schema.graphqls
+order: 3000

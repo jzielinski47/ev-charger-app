@@ -1,0 +1,17 @@
+$kind: http-request
+name: Admin Fetch and Save Chargers Around Faculty
+description: Fetches chargers from OpenChargeMap around the faculty (radius 15km, max 100) and saves them. Requires Login Admin.
+method: POST
+url: "{{baseUrl}}/api/admin/chargers/save?latitude=50.07480984825251&longitude=19.99786902616269&distance=15.0"
+queryParams:
+  - key: latitude
+    value: "50.07480984825251"
+  - key: longitude
+    value: "19.99786902616269"
+  - key: distance
+    value: "15.0"
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+order: 2000

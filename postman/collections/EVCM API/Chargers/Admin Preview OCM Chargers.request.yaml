@@ -1,0 +1,10 @@
+$kind: http-request
+name: Admin Preview OCM Chargers
+description: Fetches chargers from OpenChargeMap without saving (hardcoded lat=50.0, lon=20.0, radius=10km). Requires Login Admin.
+method: GET
+url: "{{baseUrl}}/api/admin/chargers"
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+order: 1000

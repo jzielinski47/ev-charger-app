@@ -1,14 +1,22 @@
 $kind: collection
-description: EV Charging Management API collection. Covers authentication, vehicle management, and charger point discovery.
+description: EV Charging Management API collection. Run Auth → Sign Up, Login, Login Admin first; tokens and vehicleId are stored as collection variables and reused by the other requests.
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
 variables:
   - key: baseUrl
     value: http://localhost:8080
     disabled: false
-    secret: false
   - key: token
     value: ""
     disabled: false
-    secret: false
   - key: auth_secret_03he
     secret: true
+    disabled: false
+  - key: vehicleId
+    value: ""
+    disabled: false
+  - key: admin_token
+    value: ""
     disabled: false
