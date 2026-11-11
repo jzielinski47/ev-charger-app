@@ -184,6 +184,18 @@ class ChargePointGraphQlTest {
     }
 
     @Test
+    void proximityQueryWithoutRadius_isRejectedAsValidationError() {
+        GraphQlTester.Response response = graphQlTester
+                .document("{ allChargerPointsInProximity(lat: 50.06, lon: 19.93) { id } }")
+                .execute();
+
+        response.errors().satisfy(errors -> assertThat(errors).singleElement()
+                .extracting(ResponseError::getErrorType)
+                .isEqualTo(graphql.ErrorType.ValidationError));
+        response.path("allChargerPointsInProximity").pathDoesNotExist();
+    }
+
+    @Test
     void chargerAddressFields_areResolvedWithoutErrors() {
         long chargerId = saveChargerNearKrakow(0.01, CCS2);
 
