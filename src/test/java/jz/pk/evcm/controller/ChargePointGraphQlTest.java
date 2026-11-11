@@ -151,6 +151,38 @@ class ChargePointGraphQlTest {
                 .containsExactly(ccs2, chademo);
     }
 
+    private GraphQlTester.Response queryChargerById(long id) {
+        return graphQlTester.document("""
+                        query($id: ID!) {
+                          chargerPointById(id: $id) {
+                            id
+                            addressInfo { id }
+                            connections { connectorType }
+                          }
+                        }
+                        """)
+                .variable("id", id)
+                .execute();
+    }
+
+    @Test
+    void chargerPointById_returnsChargerWithAddressAndConnections() {
+        long chargerId = saveChargerNearKrakow(0.01, CCS2, CHADEMO);
+
+        GraphQlTester.Response response = queryChargerById(chargerId);
+
+        response.errors().verify();
+        response.path("chargerPointById.id").entity(Long.class).isEqualTo(chargerId);
+        response.path("chargerPointById.addressInfo.id").entity(Long.class).isEqualTo(chargerId);
+        response.path("chargerPointById.connections[*].connectorType").entityList(String.class)
+                .containsExactly("CCS2", "CHADEMO");
+    }
+
+    @Test
+    void chargerPointById_withMissingId_returnsNotFound() {
+        assertSingleError(queryChargerById(999_999L), ErrorType.NOT_FOUND, "Charger point not found");
+    }
+
     @Test
     void chargerAddressFields_areResolvedWithoutErrors() {
         long chargerId = saveChargerNearKrakow(0.01, CCS2);
