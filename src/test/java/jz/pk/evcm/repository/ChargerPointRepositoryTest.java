@@ -11,14 +11,13 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Limit;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,6 +25,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import(TestContainersConfig.class)
 class ChargerPointRepositoryTest {
+
+    private static final double COARSE_RADIUS_DEG = 1.0;
+    private static final double TEN_KM = 10_000;
 
     @Autowired
     private ChargerPointRepository repository;
@@ -67,42 +69,49 @@ class ChargerPointRepositoryTest {
         }
 
         @Test
-        void findsChargerStrictlyInsideRadius() {
-            ChargerPoint insideCharger = createChargerAt(0.0, 5.0);
+        void findsChargerInsideRadius() {
+            ChargerPoint inside = createChargerAt(0.0, 0.05); // ~5.6 km
 
-            List<ChargerPoint> results = repository.findNearbyChargers(searchCenter, 10.0);
+            List<ChargerPoint> results = repository.findNearbyChargers(
+                    searchCenter, COARSE_RADIUS_DEG, TEN_KM, Limit.of(10));
 
-            assertThat(results).containsExactly(insideCharger);
+            assertThat(results).containsExactly(inside);
         }
 
         @Test
-        void findsChargerExactlyOnRadiusEdge() {
-            ChargerPoint edgeCharger = createChargerAt(0.0, 10.0);
+        void ignoresChargerOutsideRadiusInMeters() {
+            createChargerAt(0.0, 0.1); // ~11.1 km
 
-            List<ChargerPoint> results = repository.findNearbyChargers(searchCenter, 10.0);
-
-            assertThat(results).containsExactly(edgeCharger);
-        }
-
-        @Test
-        void ignoresChargerOutsideRadius() {
-            createChargerAt(0.0, 10.1);
-
-            List<ChargerPoint> results = repository.findNearbyChargers(searchCenter, 10.0);
+            List<ChargerPoint> results = repository.findNearbyChargers(
+                    searchCenter, COARSE_RADIUS_DEG, TEN_KM, Limit.of(10));
 
             assertThat(results).isEmpty();
         }
 
         @Test
-        void filtersCorrectlyWhenMultipleChargersExistAtVariousDistances() {
-            ChargerPoint inside = createChargerAt(0.0, 3.0);
-            ChargerPoint edge = createChargerAt(0.0, 10.0);
-            createChargerAt(0.0, 15.0);
-            createChargerAt(20.0, 0.0);
+        void returnsChargersOrderedByDistance() {
+            ChargerPoint far = createChargerAt(0.0, 0.08);   // ~8.9 km
+            ChargerPoint near = createChargerAt(0.01, 0.0);  // ~1.1 km
+            ChargerPoint middle = createChargerAt(0.0, -0.04); // ~4.4 km
+            createChargerAt(0.2, 0.0); // ~22 km
 
-            List<ChargerPoint> results = repository.findNearbyChargers(searchCenter, 10.0);
+            List<ChargerPoint> results = repository.findNearbyChargers(
+                    searchCenter, COARSE_RADIUS_DEG, TEN_KM, Limit.of(10));
 
-            assertThat(results).containsExactlyInAnyOrder(inside, edge);
+            assertThat(results).containsExactly(near, middle, far);
+        }
+
+        @Test
+        void respectsLimitAndKeepsTheClosest() {
+            ChargerPoint closest = createChargerAt(0.0, 0.01);
+            ChargerPoint second = createChargerAt(0.0, 0.02);
+            createChargerAt(0.0, 0.03);
+
+            List<ChargerPoint> results = repository.findNearbyChargers(
+                    searchCenter, COARSE_RADIUS_DEG, TEN_KM, Limit.of(2));
+
+            assertThat(results).containsExactly(closest, second);
         }
     }
+
 }
