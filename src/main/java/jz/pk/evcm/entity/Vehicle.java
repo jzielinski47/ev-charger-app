@@ -2,6 +2,7 @@ package jz.pk.evcm.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.Year;
 import java.util.Set;
@@ -28,6 +29,7 @@ public class Vehicle {
     @Enumerated(EnumType.STRING)
     private VehicleOriginatingMarket vehicleOriginatingMarket;
 
+    @BatchSize(size = 100)
     @ElementCollection(targetClass = VehicleInlet.class)
     @Enumerated(EnumType.STRING)
     @CollectionTable(name = "vehicle_inlets", joinColumns = @JoinColumn(name = "vehicle_id"))
