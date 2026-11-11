@@ -56,7 +56,7 @@ class ChargePointGraphQlTest {
     private static final double RADIUS_KM = 5.0;
 
     private static final String PROXIMITY_QUERY = """
-            query($lat: Float, $lon: Float, $proximity: Float, $vehicleId: ID) {
+            query($lat: Float!, $lon: Float!, $proximity: Float!, $vehicleId: ID) {
               allChargerPointsInProximity(lat: $lat, lon: $lon, proximity: $proximity, vehicleId: $vehicleId) {
                 id
                 connections { connectorType }
@@ -188,7 +188,7 @@ class ChargePointGraphQlTest {
         long chargerId = saveChargerNearKrakow(0.01, CCS2);
 
         GraphQlTester.Response response = graphQlTester.document("""
-                        query($lat: Float, $lon: Float, $proximity: Float) {
+                        query($lat: Float!, $lon: Float!, $proximity: Float!) {
                           allChargerPointsInProximity(lat: $lat, lon: $lon, proximity: $proximity) {
                             addressInfo { id latitude longitude }
                           }
