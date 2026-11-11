@@ -25,6 +25,7 @@ import org.springframework.graphql.execution.ErrorType;
 import org.springframework.graphql.test.tester.GraphQlTester;
 import org.springframework.graphql.test.tester.HttpGraphQlTester;
 import org.springframework.http.HttpHeaders;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,18 +36,8 @@ import static jz.pk.evcm.entity.ConnectorType.*;
 import static jz.pk.evcm.testdata.TestVehicleDefaults.aVehicleOwnedBy;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {
-                "spring.graphql.http.path=/graphql/chargers",
-                "spring.jpa.open-in-view=false",
-                "security.jwt.secret-key=dGVzdC1vbmx5LWp3dC1zZWNyZXQta2V5LTI1Ni1iaXRzLWxvbmc=",
-                "security.jwt.expiration-time=3600000",
-                "opencharge.api.key=test",
-                "charger.sync.enabled=false",
-                "admin.email=admin@test.dev",
-                "admin.password=admin"
-        })
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("it")
 @AutoConfigureHttpGraphQlTester
 @Import(TestContainersConfig.class)
 class ChargePointGraphQlTest {
