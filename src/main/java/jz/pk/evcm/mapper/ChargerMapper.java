@@ -3,6 +3,7 @@ package jz.pk.evcm.mapper;
 import jz.pk.evcm.dto.req.ocm.AddressInfoDto;
 import jz.pk.evcm.dto.req.ocm.ChargerPointRequest;
 import jz.pk.evcm.dto.req.ocm.ConnectionDto;
+import jz.pk.evcm.dto.req.ocm.OperatorInfoDto;
 import jz.pk.evcm.entity.*;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -17,7 +18,15 @@ import org.mapstruct.MappingTarget;
 public interface ChargerMapper {
     GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
+    @Mapping(target = "operator", source = "operatorInfo")
+    @Mapping(target = "isOperational", source = "statusType.isOperational")
     ChargerPoint toEntity(ChargerPointRequest dto);
+
+    @Mapping(target = "name", source = "title")
+    @Mapping(target = "websiteUrl", source = "websiteURL")
+    @Mapping(target = "phone", source = "phonePrimaryContact")
+    @Mapping(target = "email", source = "contactEmail")
+    Operator operatorInfoDtoToOperator(OperatorInfoDto dto);
 
     @Mapping(target = "location", expression = "java(createPoint(dto.latitude(), dto.longitude()))")
     AddressInfo addressInfoDtoToAddressInfo(AddressInfoDto dto);

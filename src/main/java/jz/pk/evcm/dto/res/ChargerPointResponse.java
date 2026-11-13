@@ -3,13 +3,23 @@ package jz.pk.evcm.dto.res;
 import jz.pk.evcm.entity.AddressInfo;
 import jz.pk.evcm.entity.ChargerPoint;
 import jz.pk.evcm.entity.Connection;
+import jz.pk.evcm.entity.DataProvider;
+import jz.pk.evcm.entity.Operator;
 
+import java.time.Instant;
 import java.util.List;
 
 public record ChargerPointResponse(
         Long id,
         AddressResponse addressInfo,
-        List<ConnectionResponse> connections
+        List<ConnectionResponse> connections,
+        OperatorResponse operator,
+        DataProviderResponse dataProvider,
+        Boolean isOperational,
+        String usageCost,
+        Integer numberOfPoints,
+        Instant dateLastVerified,
+        Instant dateLastConfirmed
 ) {
     public static ChargerPointResponse fromChargerPoint(ChargerPoint chargerPoint) {
         if (chargerPoint == null) {
@@ -23,7 +33,14 @@ public record ChargerPointResponse(
                         ? chargerPoint.getConnections().stream()
                         .map(ConnectionResponse::fromConnection)
                         .toList()
-                        : List.of()
+                        : List.of(),
+                OperatorResponse.fromOperator(chargerPoint.getOperator()),
+                DataProviderResponse.fromDataProvider(chargerPoint.getDataProvider()),
+                chargerPoint.getIsOperational(),
+                chargerPoint.getUsageCost(),
+                chargerPoint.getNumberOfPoints(),
+                chargerPoint.getDateLastVerified(),
+                chargerPoint.getDateLastConfirmed()
         );
     }
 }
@@ -86,3 +103,39 @@ record ConnectionResponse(
     }
 }
 
+record OperatorResponse(
+        Long id,
+        String name,
+        String websiteUrl,
+        String phone,
+        String email,
+        String faultReportEmail
+) {
+    public static OperatorResponse fromOperator(Operator operator) {
+        if (operator == null) {
+            return null;
+        }
+
+        return new OperatorResponse(
+                operator.getId(),
+                operator.getName(),
+                operator.getWebsiteUrl(),
+                operator.getPhone(),
+                operator.getEmail(),
+                operator.getFaultReportEmail()
+        );
+    }
+}
+
+record DataProviderResponse(
+        Long id,
+        String license
+) {
+    public static DataProviderResponse fromDataProvider(DataProvider dataProvider) {
+        if (dataProvider == null) {
+            return null;
+        }
+
+        return new DataProviderResponse(dataProvider.getId(), dataProvider.getLicense());
+    }
+}

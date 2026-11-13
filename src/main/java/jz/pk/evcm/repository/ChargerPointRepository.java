@@ -19,6 +19,8 @@ public interface ChargerPointRepository extends JpaRepository<ChargerPoint, Long
     @Query("""
             SELECT cp FROM ChargerPoint cp
             JOIN FETCH cp.addressInfo a
+            LEFT JOIN FETCH cp.operator
+            LEFT JOIN FETCH cp.dataProvider
             WHERE function('ST_DWithin', a.location, :userLocation, :distanceDeg) = true
               AND function('ST_DistanceSphere', a.location, :userLocation) <= :distanceMeters
             ORDER BY function('ST_DistanceSphere', a.location, :userLocation)
@@ -31,6 +33,8 @@ public interface ChargerPointRepository extends JpaRepository<ChargerPoint, Long
     @Query("""
             SELECT cp FROM ChargerPoint cp
             JOIN FETCH cp.addressInfo a
+            LEFT JOIN FETCH cp.operator
+            LEFT JOIN FETCH cp.dataProvider
             WHERE function('ST_DWithin', a.location, :userLocation, :distanceDeg) = true
               AND function('ST_DistanceSphere', a.location, :userLocation) <= :distanceMeters
               AND EXISTS (SELECT 1 FROM Connection c

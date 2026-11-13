@@ -6,6 +6,15 @@ query: |
   query AllChargerPointsInProximity($vehicleId: ID) {
       allChargerPointsInProximity(lat: 50.0748, lon: 19.9979, proximity: 15.0, vehicleId: $vehicleId) {
           id
+          isOperational
+          usageCost
+          numberOfPoints
+          dateLastVerified
+          operator {
+              name
+              websiteUrl
+              phone
+          }
           addressInfo {
               title
               latitude

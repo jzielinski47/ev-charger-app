@@ -7,6 +7,27 @@ type ChargerPoint {
     id: ID!
     addressInfo: AddressInfo!
     connections: [Connection!]!
+    operator: Operator
+    dataProvider: DataProvider
+    isOperational: Boolean
+    usageCost: String
+    numberOfPoints: Int
+    dateLastVerified: String
+    dateLastConfirmed: String
+}
+
+type DataProvider {
+    id: ID!
+    license: String
+}
+
+type Operator {
+    id: ID!
+    name: String
+    websiteUrl: String
+    phone: String
+    email: String
+    faultReportEmail: String
 }
 
 type AddressInfo {
