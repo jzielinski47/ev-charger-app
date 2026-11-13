@@ -10,10 +10,17 @@ query: |
           usageCost
           numberOfPoints
           dateLastVerified
+          dateLastConfirmed
           operator {
+              id
               name
               websiteUrl
               phone
+              email
+              faultReportEmail
+          }
+          dataProvider {
+              license
           }
           addressInfo {
               title
@@ -31,6 +38,39 @@ variables: |-
   {
     "vehicleId": "{{vehicleId}}"
   }
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      const chargers = (body.data && body.data.allChargerPointsInProximity) || [];
+      const isoUtc = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+
+      pm.test("query succeeds without errors", () => {
+          pm.response.to.have.status(200);
+          pm.expect(body.errors).to.be.undefined;
+          pm.expect(body.data.allChargerPointsInProximity).to.be.an("array");
+      });
+
+      pm.test("isOperational is a boolean or null", () => {
+          chargers.forEach(c => pm.expect(c.isOperational === null || typeof c.isOperational === "boolean").to.be.true);
+      });
+
+      pm.test("dates are ISO-8601 UTC", () => {
+          chargers.forEach(c => [c.dateLastVerified, c.dateLastConfirmed]
+              .filter(d => d !== null)
+              .forEach(d => pm.expect(d).to.match(isoUtc)));
+      });
+
+      pm.test("numberOfPoints is an integer or null", () => {
+          chargers.forEach(c => pm.expect(c.numberOfPoints === null || Number.isInteger(c.numberOfPoints)).to.be.true);
+      });
+
+      pm.test("saved chargers have operator and data provider license", () => {
+          if (chargers.length === 0) return;
+          pm.expect(chargers.some(c => c.operator && c.operator.name)).to.be.true;
+          pm.expect(chargers.some(c => c.dataProvider && c.dataProvider.license)).to.be.true;
+      });
+    language: text/javascript
 settings: {}
 schema:
   source: file

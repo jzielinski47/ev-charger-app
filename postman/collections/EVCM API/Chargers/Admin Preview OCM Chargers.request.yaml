@@ -7,4 +7,42 @@ auth:
   type: bearer
   credentials:
     token: "{{admin_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      const chargers = pm.response.json();
+      const isoUtc = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+
+      pm.test("returns chargers", () => {
+          pm.response.to.have.status(200);
+          pm.expect(chargers).to.be.an("array").that.is.not.empty;
+      });
+
+      pm.test("each charger has the OCM detail fields", () => {
+          chargers.forEach(c => pm.expect(c).to.include.all.keys(
+              "operatorInfo", "dataProvider", "statusType", "usageCost",
+              "numberOfPoints", "dateLastVerified", "dateLastConfirmed"));
+      });
+
+      pm.test("dates are ISO-8601 UTC", () => {
+          chargers.forEach(c => [c.dateLastVerified, c.dateLastConfirmed]
+              .filter(d => d !== null)
+              .forEach(d => pm.expect(d).to.match(isoUtc)));
+      });
+
+      pm.test("statusType carries only isOperational", () => {
+          chargers.filter(c => c.statusType).forEach(c =>
+              pm.expect(Object.keys(c.statusType)).to.eql(["isOperational"]));
+      });
+
+      pm.test("operatorInfo carries only the stored operator fields", () => {
+          chargers.filter(c => c.operatorInfo).forEach(c =>
+              pm.expect(c.operatorInfo).to.have.all.keys(
+                  "id", "title", "websiteURL", "phonePrimaryContact", "contactEmail", "faultReportEmail"));
+      });
+
+      pm.test("data provider license is present", () => {
+          pm.expect(chargers.some(c => c.dataProvider && c.dataProvider.license)).to.be.true;
+      });
+    language: text/javascript
 order: 1000
