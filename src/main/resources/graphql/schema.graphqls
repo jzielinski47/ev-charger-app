@@ -1,6 +1,27 @@
 type Query {
     chargerPointById(id: ID!): ChargerPoint
-    allChargerPointsInProximity(lat: Float!, lon: Float!, proximity: Float!, vehicleId: ID): [ChargerPoint!]!
+    allChargerPointsInProximity(lat: Float!, lon: Float!, proximity: Float!, vehicleId: ID,
+                                filter: ChargerFilter, sort: ChargerSort = DISTANCE,
+                                limit: Int = 100, offset: Int = 0): [ChargerPoint!]!
+    allChargerPointsInBounds(north: Float!, south: Float!, east: Float!, west: Float!, vehicleId: ID,
+                             filter: ChargerFilter, sort: ChargerSort = DISTANCE,
+                             limit: Int = 100, offset: Int = 0): [ChargerPoint!]!
+}
+
+enum ChargerSort {
+    DISTANCE
+    POWER
+    POINTS
+}
+
+input ChargerFilter {
+    currentType: CurrentKind
+    operationalOnly: Boolean
+}
+
+enum CurrentKind {
+    AC
+    DC
 }
 
 type ChargerPoint {
@@ -14,6 +35,7 @@ type ChargerPoint {
     numberOfPoints: Int
     dateLastVerified: String
     dateLastConfirmed: String
+    distanceKm: Float
 }
 
 type DataProvider {

@@ -1,37 +1,35 @@
 package jz.pk.evcm.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import jz.pk.evcm.dto.req.local.ChargerFilter;
+import jz.pk.evcm.dto.req.local.ChargerSearchOptions;
 import jz.pk.evcm.dto.res.ChargerPointResponse;
 import jz.pk.evcm.entity.ChargerPoint;
 import jz.pk.evcm.entity.ConnectorType;
+import jz.pk.evcm.entity.CurrentType;
 import jz.pk.evcm.entity.Vehicle;
 import jz.pk.evcm.entity.VehicleInlet;
+import jz.pk.evcm.exception.InvalidSearchArgumentException;
 import jz.pk.evcm.repository.ChargerPointRepository;
+import jz.pk.evcm.repository.ChargerSearchCriteria;
+import jz.pk.evcm.repository.ChargerSearchHit;
 import jz.pk.evcm.repository.VehicleRepository;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.Point;
-import org.locationtech.jts.geom.PrecisionModel;
-import org.springframework.data.domain.Limit;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
 public class LocalChargePointService {
 
-    private static final Limit MAX_RESULTS = Limit.of(100);
-    private static final double KM_PER_DEGREE_LAT = 111.32;
-    private static final double MAX_LATITUDE_FOR_COS = 89.0;
-
     private final ChargerPointRepository chargerPointRepository;
     private final VehicleRepository vehicleRepository;
-    // set the same coordinate system as GPS (WGS84)
-    private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
     public LocalChargePointService(ChargerPointRepository chargerPointRepository,
                                    VehicleRepository vehicleRepository) {
@@ -46,22 +44,73 @@ public class LocalChargePointService {
     }
 
     public List<ChargerPointResponse> getAllChargersInProximity(double latitude, double longitude, double distanceInKm,
-                                                                Long vehicleId, String ownerEmail) {
-        Point userLocation = geometryFactory.createPoint(new Coordinate(longitude, latitude));
-        double distanceDeg = kmToDegrees(distanceInKm, latitude);
-        double distanceMeters = distanceInKm * 1000;
+                                                                Long vehicleId, String ownerEmail,
+                                                                ChargerSearchOptions options) {
+        validateLatitude("lat", latitude);
+        validateLongitude("lon", longitude);
+        if (!(distanceInKm > 0)) {
+            throw new InvalidSearchArgumentException("proximity must be greater than 0");
+        }
+        return search(vehicleId, ownerEmail, options,
+                criteria -> chargerPointRepository.searchInRadius(latitude, longitude, distanceInKm, criteria));
+    }
 
-        if (vehicleId == null) {
-            return toResponses(chargerPointRepository.findNearbyChargers(
-                    userLocation, distanceDeg, distanceMeters, MAX_RESULTS));
+    public List<ChargerPointResponse> getAllChargersInBounds(double north, double south, double east, double west,
+                                                             Long vehicleId, String ownerEmail,
+                                                             ChargerSearchOptions options) {
+        validateLatitude("north", north);
+        validateLatitude("south", south);
+        validateLongitude("east", east);
+        validateLongitude("west", west);
+        if (south > north) {
+            throw new InvalidSearchArgumentException("south must not be greater than north");
+        }
+        if (west > east) {
+            throw new InvalidSearchArgumentException("west must not be greater than east");
+        }
+        return search(vehicleId, ownerEmail, options,
+                criteria -> chargerPointRepository.searchInBounds(north, south, east, west, criteria));
+    }
+
+    private List<ChargerPointResponse> search(Long vehicleId, String ownerEmail, ChargerSearchOptions options,
+                                              Function<ChargerSearchCriteria, List<ChargerSearchHit>> query) {
+        validatePaging(options);
+        Set<ConnectorType> connectorTypes = null;
+        if (vehicleId != null) {
+            connectorTypes = compatibleConnectorsOfOwnedVehicle(vehicleId, ownerEmail);
+            if (connectorTypes.isEmpty()) {
+                return List.of();
+            }
         }
 
-        Set<ConnectorType> connectorTypes = compatibleConnectorsOfOwnedVehicle(vehicleId, ownerEmail);
-        if (connectorTypes.isEmpty()) {
-            return List.of();
+        ChargerFilter filter = options.effectiveFilter();
+        Set<CurrentType> currentTypes = filter.currentType() != null ? filter.currentType().currentTypes() : null;
+        ChargerSearchCriteria criteria = new ChargerSearchCriteria(connectorTypes, currentTypes,
+                filter.isOperationalOnly(), options.effectiveSort(), options.effectiveLimit(), options.effectiveOffset());
+
+        return load(query.apply(criteria));
+    }
+
+    private static void validateLatitude(String name, double value) {
+        if (!(value >= -90 && value <= 90)) {
+            throw new InvalidSearchArgumentException(name + " must be between -90 and 90");
         }
-        return toResponses(chargerPointRepository.findNearbyChargersWithConnectorTypeIn(
-                userLocation, distanceDeg, distanceMeters, connectorTypes, MAX_RESULTS));
+    }
+
+    private static void validateLongitude(String name, double value) {
+        if (!(value >= -180 && value <= 180)) {
+            throw new InvalidSearchArgumentException(name + " must be between -180 and 180");
+        }
+    }
+
+    private static void validatePaging(ChargerSearchOptions options) {
+        int limit = options.effectiveLimit();
+        if (limit < 1 || limit > ChargerSearchOptions.MAX_LIMIT) {
+            throw new InvalidSearchArgumentException("limit must be between 1 and " + ChargerSearchOptions.MAX_LIMIT);
+        }
+        if (options.effectiveOffset() < 0) {
+            throw new InvalidSearchArgumentException("offset must not be negative");
+        }
     }
 
     private Set<ConnectorType> compatibleConnectorsOfOwnedVehicle(Long vehicleId, String ownerEmail) {
@@ -73,15 +122,15 @@ public class LocalChargePointService {
         return VehicleInlet.compatibleConnectors(vehicle.getSupportedInlets());
     }
 
-    private static List<ChargerPointResponse> toResponses(List<ChargerPoint> chargers) {
-        return chargers.stream()
-                .map(ChargerPointResponse::fromChargerPoint)
+    private List<ChargerPointResponse> load(List<ChargerSearchHit> hits) {
+        if (hits.isEmpty()) {
+            return List.of();
+        }
+        List<Long> ids = hits.stream().map(ChargerSearchHit::id).toList();
+        Map<Long, ChargerPoint> byId = chargerPointRepository.findAllWithDetailsByIdIn(ids).stream()
+                .collect(Collectors.toMap(ChargerPoint::getId, Function.identity()));
+        return hits.stream()
+                .map(hit -> ChargerPointResponse.fromChargerPoint(byId.get(hit.id()), hit.distanceMeters() / 1000))
                 .toList();
     }
-
-    private static double kmToDegrees(double km, double latitude) {
-        double poleward = Math.min(Math.abs(latitude) + km / KM_PER_DEGREE_LAT, MAX_LATITUDE_FOR_COS);
-        return km / (KM_PER_DEGREE_LAT * Math.cos(Math.toRadians(poleward)));
-    }
-
 }

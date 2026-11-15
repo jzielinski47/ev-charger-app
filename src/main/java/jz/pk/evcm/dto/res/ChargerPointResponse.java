@@ -19,9 +19,14 @@ public record ChargerPointResponse(
         String usageCost,
         Integer numberOfPoints,
         Instant dateLastVerified,
-        Instant dateLastConfirmed
+        Instant dateLastConfirmed,
+        Double distanceKm
 ) {
     public static ChargerPointResponse fromChargerPoint(ChargerPoint chargerPoint) {
+        return fromChargerPoint(chargerPoint, null);
+    }
+
+    public static ChargerPointResponse fromChargerPoint(ChargerPoint chargerPoint, Double distanceKm) {
         if (chargerPoint == null) {
             return null;
         }
@@ -40,7 +45,8 @@ public record ChargerPointResponse(
                 chargerPoint.getUsageCost(),
                 chargerPoint.getNumberOfPoints(),
                 chargerPoint.getDateLastVerified(),
-                chargerPoint.getDateLastConfirmed()
+                chargerPoint.getDateLastConfirmed(),
+                distanceKm
         );
     }
 }

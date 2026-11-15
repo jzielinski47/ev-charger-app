@@ -4,6 +4,7 @@ import jz.pk.evcm.entity.AddressInfo;
 import jz.pk.evcm.entity.ChargerPoint;
 import jz.pk.evcm.entity.Connection;
 import jz.pk.evcm.entity.ConnectorType;
+import jz.pk.evcm.entity.CurrentType;
 import jz.pk.evcm.entity.DataProvider;
 import jz.pk.evcm.entity.Operator;
 import jz.pk.evcm.entity.User;
@@ -98,6 +99,7 @@ class ChargePointGraphQlTest {
                         .id(connectionIdCounter++)
                         .chargerPoint(charger)
                         .connectorType(type)
+                        .currentType(type == CCS2 || type == CHADEMO ? CurrentType.DC : CurrentType.AC_3P)
                         .build())
                 .toList());
         return chargerPointRepository.save(charger).getId();
@@ -143,6 +145,121 @@ class ChargePointGraphQlTest {
         queryProximity(graphQlTester, null)
                 .path("allChargerPointsInProximity[*].id").entityList(Long.class)
                 .containsExactly(ccs2, chademo);
+    }
+
+    @Test
+    void filter_keepsOnlyOperationalChargersWithTheRequestedCurrent() {
+        long operationalAc = saveChargerNearKrakow(0.01, TYPE_2);
+        saveChargerNearKrakow(0.02, CCS2);
+        long brokenAc = saveChargerNearKrakow(0.03, TYPE_2);
+        chargerPointRepository.findAllById(List.of(operationalAc, brokenAc)).forEach(charger -> {
+            charger.setIsOperational(charger.getId() == operationalAc);
+            chargerPointRepository.save(charger);
+        });
+
+        graphQlTester.document("""
+                        query($lat: Float!, $lon: Float!, $proximity: Float!) {
+                          allChargerPointsInProximity(lat: $lat, lon: $lon, proximity: $proximity,
+                                                      filter: {currentType: AC, operationalOnly: true}) {
+                            id
+                          }
+                        }
+                        """)
+                .variable("lat", KRAKOW_LAT)
+                .variable("lon", KRAKOW_LON)
+                .variable("proximity", RADIUS_KM)
+                .execute()
+                .path("allChargerPointsInProximity[*].id").entityList(Long.class)
+                .containsExactly(operationalAc);
+    }
+
+    private GraphQlTester.Response queryPage(String sort, Integer limit, Integer offset) {
+        return graphQlTester.document("""
+                        query($lat: Float!, $lon: Float!, $proximity: Float!, $sort: ChargerSort, $limit: Int, $offset: Int) {
+                          allChargerPointsInProximity(lat: $lat, lon: $lon, proximity: $proximity,
+                                                      sort: $sort, limit: $limit, offset: $offset) {
+                            id
+                          }
+                        }
+                        """)
+                .variable("lat", KRAKOW_LAT)
+                .variable("lon", KRAKOW_LON)
+                .variable("proximity", RADIUS_KM)
+                .variable("sort", sort)
+                .variable("limit", limit)
+                .variable("offset", offset)
+                .execute();
+    }
+
+    @Test
+    void pointsSortWithPaging_returnsTheRequestedPage() {
+        long one = saveChargerNearKrakow(0.01, TYPE_2);
+        long three = saveChargerNearKrakow(0.02, TYPE_2);
+        long two = saveChargerNearKrakow(0.03, TYPE_2);
+        chargerPointRepository.findAllById(List.of(one, two, three)).forEach(charger -> {
+            charger.setNumberOfPoints(charger.getId() == one ? 1 : charger.getId() == two ? 2 : 3);
+            chargerPointRepository.save(charger);
+        });
+
+        queryPage("POINTS", 2, 1)
+                .path("allChargerPointsInProximity[*].id").entityList(Long.class)
+                .containsExactly(two, one);
+    }
+
+    @Test
+    void searchResults_includeDistanceFromTheCentre_butLookupByIdDoesNot() {
+        long chargerId = saveChargerNearKrakow(0.01, CCS2);
+
+        graphQlTester.document("""
+                        query($lat: Float!, $lon: Float!, $proximity: Float!, $id: ID!) {
+                          allChargerPointsInProximity(lat: $lat, lon: $lon, proximity: $proximity) { distanceKm }
+                          chargerPointById(id: $id) { distanceKm }
+                        }
+                        """)
+                .variable("lat", KRAKOW_LAT)
+                .variable("lon", KRAKOW_LON)
+                .variable("proximity", RADIUS_KM)
+                .variable("id", chargerId)
+                .execute()
+                .path("allChargerPointsInProximity[0].distanceKm").entity(Double.class)
+                .satisfies(km -> assertThat(km).isBetween(1.10, 1.12))
+                .path("chargerPointById.distanceKm").valueIsNull();
+    }
+
+    @Test
+    void boundsQuery_withVehicle_returnsCompatibleChargersInTheBox() {
+        User owner = saveUser("bounds-owner@test.dev");
+        long vehicleId = saveVehicle(owner, VehicleInlet.CCS2);
+        long ccs2Inside = saveChargerNearKrakow(0.01, CCS2);
+        saveChargerNearKrakow(0.02, CHADEMO);
+        saveChargerNearKrakow(0.5, CCS2);
+
+        authenticatedAs(owner).document("""
+                        query($vehicleId: ID) {
+                          allChargerPointsInBounds(north: 50.1, south: 50.0, east: 20.0, west: 19.9, vehicleId: $vehicleId) {
+                            id
+                            distanceKm
+                          }
+                        }
+                        """)
+                .variable("vehicleId", vehicleId)
+                .execute()
+                .path("allChargerPointsInBounds[*].id").entityList(Long.class)
+                .containsExactly(ccs2Inside);
+    }
+
+    @Test
+    void boundsQuery_crossingTheAntimeridian_isBadRequest() {
+        assertSingleError(graphQlTester.document("""
+                        { allChargerPointsInBounds(north: 10, south: -10, east: -170, west: 170) { id } }
+                        """).execute(),
+                ErrorType.BAD_REQUEST, "west must not be greater than east");
+    }
+
+    @Test
+    void limitAboveMaximum_isBadRequest() {
+        assertSingleError(queryPage(null, 501, null), ErrorType.BAD_REQUEST, "limit must be between 1 and 500");
+        assertSingleError(queryPage(null, null, -1), ErrorType.BAD_REQUEST, "offset must not be negative");
     }
 
     private GraphQlTester.Response queryChargerById(long id) {
