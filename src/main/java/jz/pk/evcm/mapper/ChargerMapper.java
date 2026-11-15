@@ -54,7 +54,7 @@ public interface ChargerMapper {
             validCurrentType = CurrentType.fromTitle(dto.currentType().title());
         } else {
             validCurrentType = switch (mappedConnector) {
-                case CHADEMO, CCS2 -> CurrentType.DC;
+                case CHADEMO, CCS2, CCS1 -> CurrentType.DC;
                 case TYPE_2, TYPE_2_TETHERED, TYPE_2_SOCKET_ONLY -> CurrentType.AC_3P;
                 default -> CurrentType.UNKNOWN;
             };

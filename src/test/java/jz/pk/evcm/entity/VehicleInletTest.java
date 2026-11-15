@@ -37,6 +37,16 @@ class VehicleInletTest {
     }
 
     @Test
+    void compatibleConnectors_forCcs1_includesType1() {
+        assertThat(VehicleInlet.CCS1.compatibleConnectors()).containsExactlyInAnyOrder(CCS1, TYPE_1);
+    }
+
+    @Test
+    void ccs1Connector_isParsedFromItsOpenChargeMapTitle() {
+        assertThat(ConnectorType.fromTitle("CCS (Type 1)")).isEqualTo(CCS1);
+    }
+
+    @Test
     void compatibleConnectors_forMultipleInlets_returnsUnion() {
         assertThat(VehicleInlet.compatibleConnectors(List.of(VehicleInlet.CHADEMO, VehicleInlet.TYPE_2)))
                 .containsExactlyInAnyOrder(CHADEMO, TYPE_2, TYPE_2_SOCKET_ONLY, TYPE_2_TETHERED);
@@ -50,6 +60,7 @@ class VehicleInletTest {
     private static Set<ConnectorType> expectedConnectors(VehicleInlet inlet) {
         return switch (inlet) {
             case TYPE_1 -> Set.of(TYPE_1);
+            case CCS1 -> Set.of(CCS1, TYPE_1);
             case TYPE_2 -> Set.of(TYPE_2, TYPE_2_SOCKET_ONLY, TYPE_2_TETHERED);
             case CCS2 -> Set.of(CCS2, TYPE_2, TYPE_2_SOCKET_ONLY, TYPE_2_TETHERED);
             case CHADEMO -> Set.of(CHADEMO);

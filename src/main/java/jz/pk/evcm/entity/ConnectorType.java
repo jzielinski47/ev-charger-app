@@ -6,6 +6,7 @@ public enum ConnectorType {
     TYPE_2_TETHERED("Type 2 (Tethered Connector)"),
     CHADEMO("CHAdeMO"),
     CCS2("CCS (Type 2)"),
+    CCS1("CCS (Type 1)"),
     TYPE_1("Type 1 (J1772)"),
     TESLA("Tesla (Model S/X)"),
     NACS("NACS / Tesla Supercharger"),
