@@ -49,10 +49,14 @@ public class OpenChargeController {
 
     @PostMapping("/save")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ChargerImportSummary> fetchAllChargersInProximityAndSave(@RequestParam Double latitude, @RequestParam Double longitude, @RequestParam Double distance) {
+    public ResponseEntity<ChargerImportSummary> fetchAllChargersInProximityAndSave(
+            @RequestParam @DecimalMin("-90") @DecimalMax("90") Double latitude,
+            @RequestParam @DecimalMin("-180") @DecimalMax("180") Double longitude,
+            @RequestParam @Positive Double distance,
+            @RequestParam(defaultValue = "1000") @Min(1) @Max(MAX_RESULTS) Integer maxResults) {
         System.out.println("Trying fetching all chargers");
 
-        ChargerImportSummary summary = openChargerAPI.fetchChargersAndSave(latitude, longitude, distance, 100);
+        ChargerImportSummary summary = openChargerAPI.fetchChargersAndSave(latitude, longitude, distance, maxResults);
 
         System.out.println("Imported " + summary.imported() + " chargers from OpenCharge API ("
                 + summary.created() + " new, " + summary.updated() + " updated)");

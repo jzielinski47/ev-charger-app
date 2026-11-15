@@ -149,4 +149,24 @@ class OpenChargeControllerTest {
                 .jsonPath("$.created").isEqualTo(1)
                 .jsonPath("$.updated").isEqualTo(1);
     }
+
+    @Test
+    void save_requestsUpTo1000ChargersByDefault_andAcceptsALargerLimit() {
+        webTestClient.post().uri("/api/admin/chargers/save?latitude=50.06&longitude=19.93&distance=50")
+                .header(HttpHeaders.AUTHORIZATION, adminBearer())
+                .exchange()
+                .expectStatus().isOk();
+        assertThat(LAST_OCM_QUERY.get()).contains("maxresults=1000");
+
+        webTestClient.post().uri("/api/admin/chargers/save?latitude=50.06&longitude=19.93&distance=50&maxResults=5000")
+                .header(HttpHeaders.AUTHORIZATION, adminBearer())
+                .exchange()
+                .expectStatus().isOk();
+        assertThat(LAST_OCM_QUERY.get()).contains("maxresults=5000");
+
+        webTestClient.post().uri("/api/admin/chargers/save?latitude=50.06&longitude=19.93&distance=50&maxResults=5001")
+                .header(HttpHeaders.AUTHORIZATION, adminBearer())
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
 }
