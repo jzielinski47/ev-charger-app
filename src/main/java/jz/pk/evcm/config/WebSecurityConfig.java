@@ -53,6 +53,7 @@ class WebSecurityConfig {
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/api/catalog/**",
+                                "/actuator/health",
                                 "/public/**",
                                 "/graphql/chargers",
                                 "/swagger-ui/**",
