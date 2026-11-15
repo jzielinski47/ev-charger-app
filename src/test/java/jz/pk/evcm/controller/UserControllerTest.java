@@ -131,4 +131,44 @@ class UserControllerTest {
         assertThat(userRepository.findByEmail("me@test.dev")).get()
                 .extracting(User::getAvatarSeed).isNull();
     }
+
+    private WebTestClient.ResponseSpec putProfile(User user, String body) {
+        return webTestClient.put().uri("/api/users/me")
+                .header(HttpHeaders.AUTHORIZATION, bearer(user))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(body)
+                .exchange();
+    }
+
+    @Test
+    void updateProfile_changesNameAndSurname() {
+        User user = saveUser("me@test.dev");
+
+        putProfile(user, """
+                {"name": "  Anna ", "surname": "Nowak"}
+                """)
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.name").isEqualTo("Anna")
+                .jsonPath("$.surname").isEqualTo("Nowak")
+                .jsonPath("$.email").isEqualTo("me@test.dev");
+
+        assertThat(userRepository.findByEmail("me@test.dev")).get()
+                .extracting(User::getName, User::getSurname).containsExactly("Anna", "Nowak");
+    }
+
+    @Test
+    void updateProfile_withBlankFields_returnsFieldErrors() {
+        User user = saveUser("me@test.dev");
+
+        putProfile(user, """
+                {"name": " ", "surname": null}
+                """)
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.errors.length()").isEqualTo(2);
+
+        assertThat(userRepository.findByEmail("me@test.dev")).get()
+                .extracting(User::getName).isEqualTo("Jan");
+    }
 }

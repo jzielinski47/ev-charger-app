@@ -25,6 +25,14 @@ public class UserService {
     }
 
     @Transactional
+    public UserResponse updateProfile(String email, String name, String surname) {
+        User user = getUserByEmail(email);
+        user.setName(name.trim());
+        user.setSurname(surname.trim());
+        return new UserResponse(user);
+    }
+
+    @Transactional
     public UserResponse updateAvatar(String email, String seed) {
         User user = getUserByEmail(email);
         user.setAvatarSeed(seed);
