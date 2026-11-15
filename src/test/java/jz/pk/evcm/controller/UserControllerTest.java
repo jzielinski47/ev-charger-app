@@ -78,7 +78,7 @@ class UserControllerTest {
 
     @Test
     void getCurrentUser_withoutToken_isRejected() {
-        webTestClient.get().uri("/api/users/me").exchange().expectStatus().is4xxClientError();
+        webTestClient.get().uri("/api/users/me").exchange().expectStatus().isUnauthorized();
     }
 
     @Test
