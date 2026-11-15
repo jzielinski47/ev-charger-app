@@ -125,4 +125,28 @@ class OpenChargeControllerTest {
                 .exchange()
                 .expectStatus().isBadRequest();
     }
+
+    @Test
+    void save_returnsImportSummary_countingNewAndUpdatedChargers() {
+        webTestClient.post().uri("/api/admin/chargers/save?latitude=50.06&longitude=19.93&distance=5")
+                .header(HttpHeaders.AUTHORIZATION, adminBearer())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.imported").isEqualTo(2)
+                .jsonPath("$.created").isEqualTo(2)
+                .jsonPath("$.updated").isEqualTo(0)
+                .jsonPath("$.pois.length()").isEqualTo(2);
+
+        chargerPointRepository.deleteById(202L);
+
+        webTestClient.post().uri("/api/admin/chargers/save?latitude=50.06&longitude=19.93&distance=5")
+                .header(HttpHeaders.AUTHORIZATION, adminBearer())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.imported").isEqualTo(2)
+                .jsonPath("$.created").isEqualTo(1)
+                .jsonPath("$.updated").isEqualTo(1);
+    }
 }

@@ -2,6 +2,7 @@ package jz.pk.evcm.service;
 
 import jakarta.transaction.Transactional;
 import jz.pk.evcm.dto.req.ocm.ChargerPointRequest;
+import jz.pk.evcm.dto.res.ChargerImportSummary;
 import jz.pk.evcm.entity.ChargerPoint;
 import jz.pk.evcm.mapper.ChargerMapper;
 import jz.pk.evcm.repository.ChargerPointRepository;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /*
  * OPEN CHARGE MAP SERVICE to call the API for the list of chargers
@@ -57,7 +60,7 @@ public class OpenChargeApiService implements OpenChargeApiContract {
     }
 
     @Transactional
-    public List<ChargerPointRequest> fetchChargersAndSave(
+    public ChargerImportSummary fetchChargersAndSave(
             Double latitude,
             Double longitude,
             Double distanceInKm,
@@ -67,7 +70,7 @@ public class OpenChargeApiService implements OpenChargeApiContract {
                 maxResults);
 
         if (fetchedChargers == null || fetchedChargers.isEmpty()) {
-            return List.of();
+            return ChargerImportSummary.EMPTY;
         }
 
         List<ChargerPoint> chargerEntities = fetchedChargers.stream()
@@ -78,11 +81,15 @@ public class OpenChargeApiService implements OpenChargeApiContract {
                 .map(ChargerPoint::getId)
                 .toList();
 
-        chargerPointRepository.findAllById(ids); // for JPA context loading
+        Set<Long> existingIds = chargerPointRepository.findAllById(ids).stream()
+                .map(ChargerPoint::getId)
+                .collect(Collectors.toSet());
 
         chargerPointRepository.saveAll(chargerEntities);
 
-        return fetchedChargers;
+        int updated = (int) ids.stream().distinct().filter(existingIds::contains).count();
+        int imported = (int) ids.stream().distinct().count();
+        return new ChargerImportSummary(imported, imported - updated, updated, fetchedChargers);
     }
 
 

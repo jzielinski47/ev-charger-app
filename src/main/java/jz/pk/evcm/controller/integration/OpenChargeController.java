@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import jz.pk.evcm.dto.req.ocm.ChargerPointRequest;
+import jz.pk.evcm.dto.res.ChargerImportSummary;
 import jz.pk.evcm.service.OpenChargeApiService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,18 +49,14 @@ public class OpenChargeController {
 
     @PostMapping("/save")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<ChargerPointRequest>> fetchAllChargersInProximityAndSave(@RequestParam Double latitude, @RequestParam Double longitude, @RequestParam Double distance) {
+    public ResponseEntity<ChargerImportSummary> fetchAllChargersInProximityAndSave(@RequestParam Double latitude, @RequestParam Double longitude, @RequestParam Double distance) {
         System.out.println("Trying fetching all chargers");
 
-        List<ChargerPointRequest> req = openChargerAPI.fetchChargersAndSave(latitude, longitude, distance, 100);
+        ChargerImportSummary summary = openChargerAPI.fetchChargersAndSave(latitude, longitude, distance, 100);
 
-        if (req == null) {
-            System.out.println("OpenCharge API returned NULL!");
-            return ResponseEntity.internalServerError().build();
-        }
-
-        System.out.println("Fetched " + req.size() + " chargers from OpenCharge API");
-        return new ResponseEntity<>(req, HttpStatus.OK);
+        System.out.println("Imported " + summary.imported() + " chargers from OpenCharge API ("
+                + summary.created() + " new, " + summary.updated() + " updated)");
+        return new ResponseEntity<>(summary, HttpStatus.OK);
     }
 
 }
