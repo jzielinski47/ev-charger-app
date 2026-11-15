@@ -66,4 +66,4 @@ settings: {}
 schema:
   source: file
   location: /home/jzielinski/SoftwareDevelopment/ev-charger-map/src/main/resources/graphql/schema.graphqls
-order: 4000
+order: 1500
