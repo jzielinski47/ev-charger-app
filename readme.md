@@ -84,6 +84,14 @@ Protected endpoints require a JWT obtained from `POST /api/auth/login`, sent as:
 Authorization: Bearer <token>
 ```
 
+Login also returns a `refreshToken` (valid 30 days, configurable via `security.jwt.refresh-expiration`). When the access token expires, exchange the refresh token at `POST /api/auth/refresh` for a new pair; every refresh token can be used only once. `POST /api/auth/logout` revokes it. Access tokens are stateless and stay valid until they expire.
+
+A missing, invalid or expired token on a protected endpoint returns `401`; a valid token without the required role returns `403`:
+
+```json
+{ "error": "Unauthorized", "message": "Authentication required" }
+```
+
 | Access level | Endpoints |
 |---|---|
 | Public | `/api/auth/**`, `/graphql/chargers`, Swagger / OpenAPI docs |
@@ -108,6 +116,23 @@ Retry-After: 42
 { "error": "Too Many Requests", "message": "Rate limit exceeded, retry in 42 seconds" }
 ```
 
+### Validation Errors
+
+A `400` caused by an invalid request body lists every failing field:
+
+```json
+{
+  "error": "Bad Request",
+  "message": "Validation failed",
+  "errors": [
+    { "field": "email", "message": "Please provide a valid email address" },
+    { "field": "password", "message": "Password must be at least 8 characters long" }
+  ]
+}
+```
+
+A value of the wrong type (for example an unknown enum value) is reported as `{ "field": "<path>", "message": "Invalid value" }`. A body that is not valid JSON returns `{ "error": "Bad Request", "message": "Malformed request body" }` without `errors`.
+
 ### REST Endpoints
 
 #### Auth — `/api/auth`
@@ -115,7 +140,9 @@ Retry-After: 42
 | Method | Path | Auth | Description |
 |---|---|---|---|
 | `POST` | `/api/auth/signup` | Public | Register a new user account |
-| `POST` | `/api/auth/login` | Public | Log in and receive a JWT |
+| `POST` | `/api/auth/login` | Public | Log in and receive an access and refresh token |
+| `POST` | `/api/auth/refresh` | Public | Exchange a refresh token for a new pair |
+| `POST` | `/api/auth/logout` | Public | Revoke a refresh token |
 
 **`POST /api/auth/signup`**
 
@@ -148,13 +175,30 @@ Errors: `400` validation failed, `409` email already registered.
 { "email": "jan@example.com", "password": "secret123" }
 ```
 
-Response `200 OK` (`expiresIn` in milliseconds):
+Response `200 OK` (`expiresIn` and `refreshExpiresIn` in milliseconds):
 
 ```json
-{ "token": "eyJhbGciOiJIUzI1NiJ9...", "expiresIn": 3600000 }
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9...",
+  "expiresIn": 3600000,
+  "refreshToken": "q3Jx0b0...",
+  "refreshExpiresIn": 2592000000
+}
 ```
 
 Errors: `400` validation failed, `401` bad credentials.
+
+**`POST /api/auth/refresh`**
+
+```json
+{ "refreshToken": "q3Jx0b0..." }
+```
+
+Response `200 OK` with the same body as login. The submitted refresh token is revoked. Errors: `400` validation failed, `401` refresh token unknown, already used, revoked or expired.
+
+**`POST /api/auth/logout`**
+
+Same body as refresh. Response `204 No Content`, also when the token was already revoked. Errors: `400` validation failed.
 
 #### Vehicles — `/api/vehicles`
 
@@ -220,7 +264,7 @@ Optional query parameter `targetEmail` on `GET /api/vehicles` and `POST /api/veh
 
 `DELETE` returns `200 OK` with an empty body.
 
-Errors: `400` validation failed, `403` missing/expired token or `targetEmail` used by a non-admin, `404` vehicle does not exist or belongs to another user.
+Errors: `400` validation failed, `401` missing, invalid or expired token, `403` `targetEmail` used by a non-admin, `404` vehicle does not exist or belongs to another user.
 
 **Vehicle inlets** and the charger connectors they are compatible with (used by the GraphQL `vehicleId` filter):
 
@@ -241,7 +285,7 @@ Admin-only tools for working directly with [Open Charge Map](https://openchargem
 | `GET` | `/api/admin/chargers` | Preview raw OCM chargers within 10 km of `50.0, 20.0`; nothing is saved |
 | `POST` | `/api/admin/chargers/save?latitude={lat}&longitude={lon}&distance={km}` | Fetch up to 100 OCM chargers around a point and save them to the local database |
 
-Both return the raw OCM charger list. Errors: `403` when not logged in as an admin, `500` when OCM returns no data.
+Both return the raw OCM charger list. Errors: `401` when not logged in, `403` when not an admin, `500` when OCM returns no data.
 
 ### GraphQL API
 
