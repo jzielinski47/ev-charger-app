@@ -12,6 +12,7 @@ import jz.pk.evcm.entity.VehicleInlet;
 import jz.pk.evcm.exception.InvalidSearchArgumentException;
 import jz.pk.evcm.repository.ChargerPointRepository;
 import jz.pk.evcm.repository.ChargerSearchCriteria;
+import jz.pk.evcm.repository.ChargerSearchHit;
 import jz.pk.evcm.repository.VehicleRepository;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.stereotype.Service;
@@ -81,15 +82,15 @@ public class LocalChargePointService {
         return VehicleInlet.compatibleConnectors(vehicle.getSupportedInlets());
     }
 
-    private List<ChargerPointResponse> load(List<Long> orderedIds) {
-        if (orderedIds.isEmpty()) {
+    private List<ChargerPointResponse> load(List<ChargerSearchHit> hits) {
+        if (hits.isEmpty()) {
             return List.of();
         }
-        Map<Long, ChargerPoint> byId = chargerPointRepository.findAllWithDetailsByIdIn(orderedIds).stream()
+        List<Long> ids = hits.stream().map(ChargerSearchHit::id).toList();
+        Map<Long, ChargerPoint> byId = chargerPointRepository.findAllWithDetailsByIdIn(ids).stream()
                 .collect(Collectors.toMap(ChargerPoint::getId, Function.identity()));
-        return orderedIds.stream()
-                .map(byId::get)
-                .map(ChargerPointResponse::fromChargerPoint)
+        return hits.stream()
+                .map(hit -> ChargerPointResponse.fromChargerPoint(byId.get(hit.id()), hit.distanceMeters() / 1000))
                 .toList();
     }
 }

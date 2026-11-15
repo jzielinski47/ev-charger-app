@@ -207,6 +207,26 @@ class ChargePointGraphQlTest {
     }
 
     @Test
+    void searchResults_includeDistanceFromTheCentre_butLookupByIdDoesNot() {
+        long chargerId = saveChargerNearKrakow(0.01, CCS2);
+
+        graphQlTester.document("""
+                        query($lat: Float!, $lon: Float!, $proximity: Float!, $id: ID!) {
+                          allChargerPointsInProximity(lat: $lat, lon: $lon, proximity: $proximity) { distanceKm }
+                          chargerPointById(id: $id) { distanceKm }
+                        }
+                        """)
+                .variable("lat", KRAKOW_LAT)
+                .variable("lon", KRAKOW_LON)
+                .variable("proximity", RADIUS_KM)
+                .variable("id", chargerId)
+                .execute()
+                .path("allChargerPointsInProximity[0].distanceKm").entity(Double.class)
+                .satisfies(km -> assertThat(km).isBetween(1.10, 1.12))
+                .path("chargerPointById.distanceKm").valueIsNull();
+    }
+
+    @Test
     void limitAboveMaximum_isBadRequest() {
         assertSingleError(queryPage(null, 501, null), ErrorType.BAD_REQUEST, "limit must be between 1 and 500");
         assertSingleError(queryPage(null, null, -1), ErrorType.BAD_REQUEST, "offset must not be negative");

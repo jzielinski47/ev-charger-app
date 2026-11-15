@@ -72,10 +72,14 @@ class ChargerPointRepositoryTest {
         return entityManager.persistFlushFind(chargerPoint);
     }
 
-    private List<Long> search(ChargerSearchCriteria criteria) {
+    private List<ChargerSearchHit> searchHits(ChargerSearchCriteria criteria) {
         entityManager.flush();
         entityManager.clear();
         return repository.searchInRadius(0.0, 0.0, TEN_KM, criteria);
+    }
+
+    private List<Long> search(ChargerSearchCriteria criteria) {
+        return searchHits(criteria).stream().map(ChargerSearchHit::id).toList();
     }
 
     private static ChargerSearchCriteria anyCharger(int limit) {
@@ -105,6 +109,15 @@ class ChargerPointRepositoryTest {
             createChargerAt(0.0, 0.1); // ~11.1 km
 
             assertThat(search(anyCharger(10))).isEmpty();
+        }
+
+        @Test
+        void returnsSphericalDistanceFromTheCentre() {
+            createChargerAt(0.0, 0.05);
+
+            assertThat(searchHits(anyCharger(10))).singleElement()
+                    .extracting(ChargerSearchHit::distanceMeters)
+                    .satisfies(meters -> assertThat(meters).isBetween(5_550.0, 5_570.0));
         }
 
         @Test

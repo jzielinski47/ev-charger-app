@@ -17,7 +17,7 @@ class ChargerPointSearchRepositoryImpl implements ChargerPointSearchRepository {
     private static final String REFERENCE_POINT = "ST_SetSRID(ST_MakePoint(:refLon, :refLat), 4326)";
 
     private static final String SELECT = """
-            SELECT cp.charger_point_id
+            SELECT cp.charger_point_id, ST_DistanceSphere(a.location, %s) AS distance_m
             FROM charger_point cp
             JOIN address_info a ON a.id = cp.address_info_id
             CROSS JOIN LATERAL (
@@ -29,7 +29,7 @@ class ChargerPointSearchRepositoryImpl implements ChargerPointSearchRepository {
             ) m
             WHERE (:operationalOnly = FALSE OR cp.is_operational = TRUE)
               AND ((:anyConnector AND :anyCurrent) OR m.matching > 0)
-            """;
+            """.formatted(REFERENCE_POINT);
 
     private static final String IN_RADIUS = """
               AND ST_DWithin(a.location, %1$s, :distanceDeg)
@@ -39,27 +39,27 @@ class ChargerPointSearchRepositoryImpl implements ChargerPointSearchRepository {
     private static final String ORDER_AND_PAGE = """
             ORDER BY CASE WHEN :sort = 'POWER' THEN m.max_power END DESC NULLS LAST,
                      CASE WHEN :sort = 'POINTS' THEN cp.number_of_points END DESC NULLS LAST,
-                     ST_DistanceSphere(a.location, %s),
+                     distance_m,
                      cp.charger_point_id
             LIMIT :limit OFFSET :offset
-            """.formatted(REFERENCE_POINT);
+            """;
 
     @PersistenceContext
     private EntityManager entityManager;
 
     @Override
-    public List<Long> searchInRadius(double latitude, double longitude, double distanceInKm,
-                                     ChargerSearchCriteria criteria) {
-        Query query = entityManager.createNativeQuery(SELECT + IN_RADIUS + ORDER_AND_PAGE, Long.class)
+    public List<ChargerSearchHit> searchInRadius(double latitude, double longitude, double distanceInKm,
+                                                 ChargerSearchCriteria criteria) {
+        Query query = entityManager.createNativeQuery(SELECT + IN_RADIUS + ORDER_AND_PAGE)
                 .setParameter("distanceDeg", kmToDegrees(distanceInKm, latitude))
                 .setParameter("distanceMeters", distanceInKm * 1000);
         return run(query, latitude, longitude, criteria);
     }
 
     @SuppressWarnings("unchecked")
-    private static List<Long> run(Query query, double refLatitude, double refLongitude,
-                                  ChargerSearchCriteria criteria) {
-        return query
+    private static List<ChargerSearchHit> run(Query query, double refLatitude, double refLongitude,
+                                              ChargerSearchCriteria criteria) {
+        List<Object[]> rows = query
                 .setParameter("refLat", refLatitude)
                 .setParameter("refLon", refLongitude)
                 .setParameter("anyConnector", criteria.connectorTypes() == null)
@@ -71,6 +71,9 @@ class ChargerPointSearchRepositoryImpl implements ChargerPointSearchRepository {
                 .setParameter("limit", criteria.limit())
                 .setParameter("offset", criteria.offset())
                 .getResultList();
+        return rows.stream()
+                .map(row -> new ChargerSearchHit(((Number) row[0]).longValue(), ((Number) row[1]).doubleValue()))
+                .toList();
     }
 
     private static Collection<String> names(Set<? extends Enum<?>> values) {
