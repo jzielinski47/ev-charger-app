@@ -11,6 +11,9 @@ variables:
   - key: token
     value: ""
     disabled: false
+  - key: refreshToken
+    value: ""
+    disabled: false
   - key: auth_secret_03he
     secret: true
     disabled: false

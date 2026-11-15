@@ -17,6 +17,11 @@ scripts:
   - type: afterResponse
     code: |-
       pm.test("logged in", () => pm.response.to.have.status(200));
+      pm.test("returns access and refresh tokens", () => {
+          pm.expect(pm.response.json().token).to.be.a("string");
+          pm.expect(pm.response.json().refreshToken).to.be.a("string");
+      });
       pm.collectionVariables.set("token", pm.response.json().token);
+      pm.collectionVariables.set("refreshToken", pm.response.json().refreshToken);
     language: text/javascript
 order: 2000
