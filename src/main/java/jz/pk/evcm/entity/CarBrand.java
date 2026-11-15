@@ -14,6 +14,7 @@ public class CarBrand {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // slug is url-safe id for a brand eg. mercedes-benz
     @Column(nullable = false, unique = true, length = 64)
     private String slug;
 
