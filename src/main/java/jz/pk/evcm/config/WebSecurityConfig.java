@@ -52,6 +52,7 @@ class WebSecurityConfig {
                         .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR).permitAll()
                         .requestMatchers(
                                 "/api/auth/**",
+                                "/api/catalog/**",
                                 "/public/**",
                                 "/graphql/chargers",
                                 "/swagger-ui/**",
