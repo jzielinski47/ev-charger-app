@@ -1,0 +1,21 @@
+$kind: http-request
+name: Get Brands
+description: Public list of car brands for the vehicle form.
+method: GET
+url: "{{baseUrl}}/api/catalog/brands"
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      const brands = pm.response.json();
+
+      pm.test("returns brands with slug and name", () => {
+          pm.response.to.have.status(200);
+          pm.expect(brands).to.be.an("array").that.is.not.empty;
+          brands.forEach(b => pm.expect(b).to.have.all.keys("slug", "name"));
+      });
+
+      pm.test("includes tesla", () => pm.expect(brands.map(b => b.slug)).to.include("tesla"));
+    language: text/javascript
+order: 1000

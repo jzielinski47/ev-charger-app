@@ -25,9 +25,10 @@ public class ChargerSyncScheduler {
     public void syncChargers() {
         log.info("Charger sync started");
         try {
-            var saved = chargerService.fetchChargersAndSave(
+            var summary = chargerService.fetchChargersAndSave(
                     props.latitude(), props.longitude(), props.distanceInKm(), props.maxResults());
-            log.info("Charger sync finished, saved {} chargers", saved.size());
+            log.info("Charger sync finished, saved {} chargers ({} new, {} updated)",
+                    summary.imported(), summary.created(), summary.updated());
         } catch (Exception e) {
             log.error("Charger sync failed", e);
         }

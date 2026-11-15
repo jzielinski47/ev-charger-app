@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 public enum VehicleInlet {
     TYPE_1(Set.of(ConnectorType.TYPE_1)),
+    CCS1(Set.of(ConnectorType.CCS1, ConnectorType.TYPE_1)),
     TYPE_2(Set.of(ConnectorType.TYPE_2, ConnectorType.TYPE_2_SOCKET_ONLY, ConnectorType.TYPE_2_TETHERED)),
     CCS2(Set.of(ConnectorType.CCS2, ConnectorType.TYPE_2, ConnectorType.TYPE_2_SOCKET_ONLY, ConnectorType.TYPE_2_TETHERED)),
     CHADEMO(Set.of(ConnectorType.CHADEMO)),

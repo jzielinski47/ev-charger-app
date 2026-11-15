@@ -73,6 +73,7 @@ The server exposes a REST API for authentication, vehicle management and admin t
 | OpenAPI spec | `http://localhost:8080/v3/api-docs` (`/v3/api-docs.yaml` for YAML) |
 | GraphQL endpoint | `POST http://localhost:8080/graphql/chargers` |
 | GraphiQL playground | `http://localhost:8080/graphiql?path=/graphql/chargers` |
+| Health check | `GET http://localhost:8080/actuator/health` |
 
 A ready-to-use Postman collection is available in [`postman/`](postman).
 
@@ -100,7 +101,7 @@ A missing, invalid or expired token on a protected endpoint returns `401`; a val
 
 ### Rate Limiting
 
-All endpoints except `/api/auth/**` and the API docs are rate limited per client. Admins are never limited.
+All endpoints except `/api/auth/**`, `/api/catalog/**`, `/actuator/health` and the API docs are rate limited per client. Admins are never limited.
 
 | Client | Key | Default limit |
 |---|---|---|
@@ -297,6 +298,7 @@ Errors: `400` validation failed, `401` missing, invalid or expired token, `403` 
 | `VehicleInlet` | Compatible connector types |
 |---|---|
 | `TYPE_1` | `TYPE_1` |
+| `CCS1` | `CCS1`, `TYPE_1` |
 | `TYPE_2` | `TYPE_2`, `TYPE_2_SOCKET_ONLY`, `TYPE_2_TETHERED` |
 | `CCS2` | `CCS2`, `TYPE_2`, `TYPE_2_SOCKET_ONLY`, `TYPE_2_TETHERED` |
 | `CHADEMO` | `CHADEMO` |
@@ -308,8 +310,8 @@ Admin-only tools for working directly with [Open Charge Map](https://openchargem
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/api/admin/chargers` | Preview raw OCM chargers within 10 km of `50.0, 20.0`; nothing is saved |
-| `POST` | `/api/admin/chargers/save?latitude={lat}&longitude={lon}&distance={km}` | Fetch up to 100 OCM chargers around a point and save them to the local database |
+| `GET` | `/api/admin/chargers?latitude={lat}&longitude={lon}&distance={km}&maxResults={n}` | Preview raw OCM chargers around a point; nothing is saved. `maxResults` defaults to 100 |
+| `POST` | `/api/admin/chargers/save?latitude={lat}&longitude={lon}&distance={km}&maxResults={n}` | Fetch OCM chargers around a point and save them to the local database. `maxResults` defaults to 1000 |
 
 Both return the raw OCM charger list. Errors: `401` when not logged in, `403` when not an admin, `500` when OCM returns no data.
 
@@ -415,7 +417,7 @@ Invalid arguments (coordinates out of range, `proximity <= 0`, `south > north`, 
 
 #### Field values
 
-- `connectorType`: `TYPE_1`, `TYPE_2`, `TYPE_2_SOCKET_ONLY`, `TYPE_2_TETHERED`, `CCS2`, `CHADEMO`, `TESLA`, `NACS`, `UNKNOWN`
+- `connectorType`: `TYPE_1`, `TYPE_2`, `TYPE_2_SOCKET_ONLY`, `TYPE_2_TETHERED`, `CCS1`, `CCS2`, `CHADEMO`, `TESLA`, `NACS`, `UNKNOWN`
 - `currentType`: `AC_1P`, `AC_3P`, `DC`, `UNKNOWN`
 - `dateLastVerified`, `dateLastConfirmed`: ISO-8601 UTC timestamps, e.g. `2025-03-14T09:26:53Z`
 
