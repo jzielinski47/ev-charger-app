@@ -105,8 +105,8 @@ class RateLimitFilterTest {
     }
 
     @Test
-    void swaggerPaths_areNotLimited() throws Exception {
-        for (String path : List.of("/swagger-ui/index.html", "/v3/api-docs", "/v3/api-docs.yaml", "/v3/api-docs/swagger-config")) {
+    void exemptPaths_areNotLimited() throws Exception {
+        for (String path : List.of("/api/auth/signup", "/api/auth/login", "/swagger-ui/index.html", "/v3/api-docs", "/v3/api-docs.yaml", "/v3/api-docs/swagger-config")) {
             MockHttpServletRequest request = new MockHttpServletRequest("GET", path);
             request.setRemoteAddr("10.0.0.1");
             assertThat(send(request).getStatus()).isEqualTo(200);
