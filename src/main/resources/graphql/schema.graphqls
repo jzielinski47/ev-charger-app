@@ -1,6 +1,17 @@
 type Query {
     chargerPointById(id: ID!): ChargerPoint
-    allChargerPointsInProximity(lat: Float!, lon: Float!, proximity: Float!, vehicleId: ID): [ChargerPoint!]!
+    allChargerPointsInProximity(lat: Float!, lon: Float!, proximity: Float!, vehicleId: ID,
+                                filter: ChargerFilter): [ChargerPoint!]!
+}
+
+input ChargerFilter {
+    currentType: CurrentKind
+    operationalOnly: Boolean
+}
+
+enum CurrentKind {
+    AC
+    DC
 }
 
 type ChargerPoint {

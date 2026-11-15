@@ -84,7 +84,7 @@ class LocalChargePointServiceVehicleFilterTest {
     }
 
     private List<Long> chargerIds(Long vehicleId, String ownerEmail) {
-        return service.getAllChargersInProximity(KRAKOW_LAT, KRAKOW_LON, RADIUS_KM, vehicleId, ownerEmail)
+        return service.getAllChargersInProximity(KRAKOW_LAT, KRAKOW_LON, RADIUS_KM, vehicleId, ownerEmail, null)
                 .stream()
                 .map(ChargerPointResponse::id)
                 .toList();

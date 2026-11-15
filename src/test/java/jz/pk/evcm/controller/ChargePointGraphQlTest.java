@@ -4,6 +4,7 @@ import jz.pk.evcm.entity.AddressInfo;
 import jz.pk.evcm.entity.ChargerPoint;
 import jz.pk.evcm.entity.Connection;
 import jz.pk.evcm.entity.ConnectorType;
+import jz.pk.evcm.entity.CurrentType;
 import jz.pk.evcm.entity.DataProvider;
 import jz.pk.evcm.entity.Operator;
 import jz.pk.evcm.entity.User;
@@ -98,6 +99,7 @@ class ChargePointGraphQlTest {
                         .id(connectionIdCounter++)
                         .chargerPoint(charger)
                         .connectorType(type)
+                        .currentType(type == CCS2 || type == CHADEMO ? CurrentType.DC : CurrentType.AC_3P)
                         .build())
                 .toList());
         return chargerPointRepository.save(charger).getId();
@@ -143,6 +145,32 @@ class ChargePointGraphQlTest {
         queryProximity(graphQlTester, null)
                 .path("allChargerPointsInProximity[*].id").entityList(Long.class)
                 .containsExactly(ccs2, chademo);
+    }
+
+    @Test
+    void filter_keepsOnlyOperationalChargersWithTheRequestedCurrent() {
+        long operationalAc = saveChargerNearKrakow(0.01, TYPE_2);
+        saveChargerNearKrakow(0.02, CCS2);
+        long brokenAc = saveChargerNearKrakow(0.03, TYPE_2);
+        chargerPointRepository.findAllById(List.of(operationalAc, brokenAc)).forEach(charger -> {
+            charger.setIsOperational(charger.getId() == operationalAc);
+            chargerPointRepository.save(charger);
+        });
+
+        graphQlTester.document("""
+                        query($lat: Float!, $lon: Float!, $proximity: Float!) {
+                          allChargerPointsInProximity(lat: $lat, lon: $lon, proximity: $proximity,
+                                                      filter: {currentType: AC, operationalOnly: true}) {
+                            id
+                          }
+                        }
+                        """)
+                .variable("lat", KRAKOW_LAT)
+                .variable("lon", KRAKOW_LON)
+                .variable("proximity", RADIUS_KM)
+                .execute()
+                .path("allChargerPointsInProximity[*].id").entityList(Long.class)
+                .containsExactly(operationalAc);
     }
 
     private GraphQlTester.Response queryChargerById(long id) {
