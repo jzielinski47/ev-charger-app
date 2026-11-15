@@ -1,0 +1,54 @@
+$kind: graphql-request
+name: Search Chargers In Krakow Viewport
+description: Chargers inside a map viewport around Krakow, nearest to the viewport centre first.
+url: "{{baseUrl}}/graphql/chargers"
+query: |
+  query ChargersInViewport {
+      allChargerPointsInBounds(north: 50.10, south: 50.02, east: 20.05, west: 19.88) {
+          id
+          distanceKm
+          addressInfo {
+              latitude
+              longitude
+          }
+      }
+  }
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      const chargers = (body.data && body.data.allChargerPointsInBounds) || [];
+
+      pm.test("query succeeds without errors", () => {
+          pm.response.to.have.status(200);
+          pm.expect(body.errors).to.be.undefined;
+      });
+
+      pm.test("every charger lies inside the viewport", () => {
+          chargers.forEach(c => {
+              pm.expect(c.addressInfo.latitude).to.be.within(50.02, 50.10);
+              pm.expect(c.addressInfo.longitude).to.be.within(19.88, 20.05);
+          });
+      });
+
+      pm.test("nearest to the viewport centre first", () => {
+          chargers.slice(1).forEach((c, i) => pm.expect(c.distanceKm).to.be.at.least(chargers[i].distanceKm));
+      });
+
+      pm.sendRequest({
+          url: pm.variables.replaceIn("{{baseUrl}}/graphql/chargers"),
+          method: "POST",
+          header: { "Content-Type": "application/json", "Authorization": "Bearer " + pm.collectionVariables.get("token") },
+          body: { mode: "raw", raw: JSON.stringify({ query: "{ allChargerPointsInBounds(north: 10, south: -10, east: -170, west: 170) { id } }" }) }
+      }, (err, res) => {
+          pm.test("antimeridian-crossing viewport is rejected", () => {
+              pm.expect(err).to.be.null;
+              pm.expect(res.json().errors[0].extensions.classification).to.equal("BAD_REQUEST");
+          });
+      });
+    language: text/javascript
+settings: {}
+schema:
+  source: file
+  location: /home/jzielinski/SoftwareDevelopment/ev-charger-map/src/main/resources/graphql/schema.graphqls
+order: 5000

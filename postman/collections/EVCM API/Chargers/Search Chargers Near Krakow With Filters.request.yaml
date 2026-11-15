@@ -1,0 +1,48 @@
+$kind: graphql-request
+name: Search Chargers Near Krakow With Filters
+description: Operational DC chargers within 15 km of Krakow, strongest first, second page of 5.
+url: "{{baseUrl}}/graphql/chargers"
+query: |
+  query FilteredChargers {
+      allChargerPointsInProximity(lat: 50.0748, lon: 19.9979, proximity: 15.0,
+                                  filter: { currentType: DC, operationalOnly: true },
+                                  sort: POWER, limit: 5, offset: 5) {
+          id
+          distanceKm
+          isOperational
+          connections {
+              currentType
+              powerKW
+          }
+      }
+  }
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      const chargers = (body.data && body.data.allChargerPointsInProximity) || [];
+      const maxDcPower = c => Math.max(-1, ...c.connections.filter(x => x.currentType === "DC" && x.powerKW !== null).map(x => x.powerKW));
+
+      pm.test("query succeeds without errors", () => {
+          pm.response.to.have.status(200);
+          pm.expect(body.errors).to.be.undefined;
+      });
+
+      pm.test("at most 5 chargers", () => pm.expect(chargers.length).to.be.at.most(5));
+
+      pm.test("only operational chargers with a DC connection", () => {
+          chargers.forEach(c => {
+              pm.expect(c.isOperational).to.equal(true);
+              pm.expect(c.connections.some(x => x.currentType === "DC")).to.be.true;
+          });
+      });
+
+      pm.test("strongest DC connection first", () => {
+          chargers.slice(1).forEach((c, i) => pm.expect(maxDcPower(c)).to.be.at.most(maxDcPower(chargers[i])));
+      });
+    language: text/javascript
+settings: {}
+schema:
+  source: file
+  location: /home/jzielinski/SoftwareDevelopment/ev-charger-map/src/main/resources/graphql/schema.graphqls
+order: 4000

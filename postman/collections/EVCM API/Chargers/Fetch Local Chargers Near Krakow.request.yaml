@@ -6,6 +6,7 @@ query: |
   query AllChargerPointsInProximity {
       allChargerPointsInProximity(lat: 50.0748, lon: 19.9979, proximity: 15.0) {
           id
+          distanceKm
           isOperational
           usageCost
           numberOfPoints
@@ -45,6 +46,11 @@ scripts:
           pm.response.to.have.status(200);
           pm.expect(body.errors).to.be.undefined;
           pm.expect(body.data.allChargerPointsInProximity).to.be.an("array");
+      });
+
+      pm.test("chargers come nearest first with distanceKm within the radius", () => {
+          chargers.forEach(c => pm.expect(c.distanceKm).to.be.within(0, 15));
+          chargers.slice(1).forEach((c, i) => pm.expect(c.distanceKm).to.be.at.least(chargers[i].distanceKm));
       });
 
       pm.test("isOperational is a boolean or null", () => {
