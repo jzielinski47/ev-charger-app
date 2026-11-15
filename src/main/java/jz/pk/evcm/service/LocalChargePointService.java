@@ -46,6 +46,11 @@ public class LocalChargePointService {
     public List<ChargerPointResponse> getAllChargersInProximity(double latitude, double longitude, double distanceInKm,
                                                                 Long vehicleId, String ownerEmail,
                                                                 ChargerSearchOptions options) {
+        validateLatitude("lat", latitude);
+        validateLongitude("lon", longitude);
+        if (!(distanceInKm > 0)) {
+            throw new InvalidSearchArgumentException("proximity must be greater than 0");
+        }
         validatePaging(options);
         Set<ConnectorType> connectorTypes = null;
         if (vehicleId != null) {
@@ -61,6 +66,18 @@ public class LocalChargePointService {
                 filter.isOperationalOnly(), options.effectiveSort(), options.effectiveLimit(), options.effectiveOffset());
 
         return load(chargerPointRepository.searchInRadius(latitude, longitude, distanceInKm, criteria));
+    }
+
+    private static void validateLatitude(String name, double value) {
+        if (!(value >= -90 && value <= 90)) {
+            throw new InvalidSearchArgumentException(name + " must be between -90 and 90");
+        }
+    }
+
+    private static void validateLongitude(String name, double value) {
+        if (!(value >= -180 && value <= 180)) {
+            throw new InvalidSearchArgumentException(name + " must be between -180 and 180");
+        }
     }
 
     private static void validatePaging(ChargerSearchOptions options) {
