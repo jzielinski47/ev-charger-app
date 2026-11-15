@@ -3,7 +3,6 @@ package jz.pk.evcm.service;
 import jakarta.persistence.EntityNotFoundException;
 import jz.pk.evcm.dto.res.UserResponse;
 import jz.pk.evcm.entity.User;
-import jz.pk.evcm.entity.UserAvatar;
 import jz.pk.evcm.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,9 +25,9 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse updateAvatar(String email, UserAvatar avatar) {
+    public UserResponse updateAvatar(String email, String seed) {
         User user = getUserByEmail(email);
-        user.setAvatar(avatar);
+        user.setAvatarSeed(seed);
         return new UserResponse(user);
     }
 }

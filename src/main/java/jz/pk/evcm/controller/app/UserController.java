@@ -24,6 +24,6 @@ public class UserController {
 
     @PutMapping("/avatar")
     public UserResponse updateAvatar(Authentication auth, @Valid @RequestBody AvatarRequest request) {
-        return userService.updateAvatar(auth.getName(), request.avatar());
+        return userService.updateAvatar(auth.getName(), request.seed());
     }
 }

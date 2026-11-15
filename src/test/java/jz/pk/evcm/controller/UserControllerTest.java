@@ -1,7 +1,6 @@
 package jz.pk.evcm.controller;
 
 import jz.pk.evcm.entity.User;
-import jz.pk.evcm.entity.UserAvatar;
 import jz.pk.evcm.repository.UserRepository;
 import jz.pk.evcm.security.JwtService;
 import jz.pk.evcm.testdata.TestContainersConfig;
@@ -73,7 +72,7 @@ class UserControllerTest {
                 .jsonPath("$.email").isEqualTo("me@test.dev")
                 .jsonPath("$.name").isEqualTo("Jan")
                 .jsonPath("$.surname").isEqualTo("Kowalski")
-                .jsonPath("$.avatar").doesNotExist();
+                .jsonPath("$.avatarSeed").doesNotExist();
     }
 
     @Test
@@ -82,31 +81,54 @@ class UserControllerTest {
     }
 
     @Test
-    void updateAvatar_withPreset_savesIt() {
+    void updateAvatar_withSeed_savesIt() {
         User user = saveUser("me@test.dev");
 
         putAvatar(user, """
-                {"avatar": "COMET"}
+                {"seed": "Felix-42_x"}
                 """)
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.avatar").isEqualTo("COMET");
+                .jsonPath("$.avatarSeed").isEqualTo("Felix-42_x");
 
         assertThat(userRepository.findByEmail("me@test.dev")).get()
-                .extracting(User::getAvatar).isEqualTo(UserAvatar.COMET);
+                .extracting(User::getAvatarSeed).isEqualTo("Felix-42_x");
     }
 
     @Test
-    void updateAvatar_outsideThePresets_returnsBadRequest() {
+    void updateAvatar_withNullSeed_resetsToInitials() {
+        User user = saveUser("me@test.dev");
+        putAvatar(user, """
+                {"seed": "Felix"}
+                """).expectStatus().isOk();
+
+        putAvatar(user, "{}")
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.avatarSeed").doesNotExist();
+
+        assertThat(userRepository.findByEmail("me@test.dev")).get()
+                .extracting(User::getAvatarSeed).isNull();
+    }
+
+    @Test
+    void updateAvatar_withInvalidSeed_returnsBadRequest() {
         User user = saveUser("me@test.dev");
 
         putAvatar(user, """
-                {"avatar": "https://evil.example/me.png"}
+                {"seed": "https://evil.example/me.png"}
                 """)
-                .expectStatus().isBadRequest();
-        putAvatar(user, "{}").expectStatus().isBadRequest();
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.errors[0].field").isEqualTo("seed");
+        putAvatar(user, """
+                {"seed": ""}
+                """).expectStatus().isBadRequest();
+        putAvatar(user, """
+                {"seed": "%s"}
+                """.formatted("a".repeat(65))).expectStatus().isBadRequest();
 
         assertThat(userRepository.findByEmail("me@test.dev")).get()
-                .extracting(User::getAvatar).isNull();
+                .extracting(User::getAvatarSeed).isNull();
     }
 }
