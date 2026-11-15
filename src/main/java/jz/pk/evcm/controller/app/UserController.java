@@ -1,12 +1,14 @@
 package jz.pk.evcm.controller.app;
 
 import jakarta.validation.Valid;
+import jz.pk.evcm.dto.req.local.AccountDeletionRequest;
 import jz.pk.evcm.dto.req.local.AvatarRequest;
 import jz.pk.evcm.dto.req.local.PasswordChangeRequest;
 import jz.pk.evcm.dto.req.local.ProfileRequest;
 import jz.pk.evcm.dto.res.LoginResponse;
 import jz.pk.evcm.dto.res.UserResponse;
 import jz.pk.evcm.service.UserService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +30,12 @@ public class UserController {
     @PutMapping
     public UserResponse updateProfile(Authentication auth, @Valid @RequestBody ProfileRequest request) {
         return userService.updateProfile(auth.getName(), request.name(), request.surname());
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAccount(Authentication auth, @Valid @RequestBody AccountDeletionRequest request) {
+        userService.deleteAccount(auth.getName(), request.password());
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/password")

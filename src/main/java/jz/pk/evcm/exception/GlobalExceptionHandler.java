@@ -52,6 +52,13 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(LastAdminException.class)
+    public ResponseEntity<Object> handleLastAdmin(LastAdminException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                Map.of("error", "Conflict", "message", ex.getMessage())
+        );
+    }
+
     @ExceptionHandler(InvalidRefreshTokenException.class)
     public ResponseEntity<Object> handleInvalidRefreshToken(InvalidRefreshTokenException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
