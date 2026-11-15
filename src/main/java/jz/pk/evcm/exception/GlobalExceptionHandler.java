@@ -67,6 +67,11 @@ public class GlobalExceptionHandler {
         return validationFailed(errors);
     }
 
+    @ExceptionHandler(InvalidFieldException.class)
+    public ResponseEntity<Object> handleInvalidField(InvalidFieldException ex) {
+        return validationFailed(List.of(new FieldErrorResponse(ex.getField(), ex.getMessage())));
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         String field = ex.getMostSpecificCause() instanceof JacksonException jacksonEx

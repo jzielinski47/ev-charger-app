@@ -2,7 +2,9 @@ package jz.pk.evcm.controller.app;
 
 import jakarta.validation.Valid;
 import jz.pk.evcm.dto.req.local.AvatarRequest;
+import jz.pk.evcm.dto.req.local.PasswordChangeRequest;
 import jz.pk.evcm.dto.req.local.ProfileRequest;
+import jz.pk.evcm.dto.res.LoginResponse;
 import jz.pk.evcm.dto.res.UserResponse;
 import jz.pk.evcm.service.UserService;
 import org.springframework.security.core.Authentication;
@@ -26,6 +28,11 @@ public class UserController {
     @PutMapping
     public UserResponse updateProfile(Authentication auth, @Valid @RequestBody ProfileRequest request) {
         return userService.updateProfile(auth.getName(), request.name(), request.surname());
+    }
+
+    @PutMapping("/password")
+    public LoginResponse changePassword(Authentication auth, @Valid @RequestBody PasswordChangeRequest request) {
+        return userService.changePassword(auth.getName(), request.currentPassword(), request.newPassword());
     }
 
     @PutMapping("/avatar")
