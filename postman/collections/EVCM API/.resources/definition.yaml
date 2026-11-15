@@ -26,3 +26,6 @@ variables:
   - key: rate_limit_token
     value: ""
     disabled: false
+  - key: delete_token
+    value: ""
+    disabled: false

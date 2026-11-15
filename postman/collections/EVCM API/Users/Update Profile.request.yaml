@@ -1,0 +1,23 @@
+$kind: http-request
+name: Update Profile
+method: PUT
+url: "{{baseUrl}}/api/users/me"
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "John",
+      "surname": "Doe"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("profile updated", () => {
+          pm.response.to.have.status(200);
+          pm.expect(pm.response.json().name).to.equal("John");
+          pm.expect(pm.response.json().surname).to.equal("Doe");
+      });
+    language: text/javascript
+order: 2000
