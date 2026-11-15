@@ -66,6 +66,10 @@ public class SessionService {
         return startSession(stored.getUser());
     }
 
+    public void endSession(String rawToken) {
+        refreshTokenRepository.deleteByTokenHash(hash(rawToken));
+    }
+
     public void endAllSessions(User user) {
         refreshTokenRepository.deleteByUser(user);
     }

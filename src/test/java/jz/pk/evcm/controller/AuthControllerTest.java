@@ -127,4 +127,16 @@ class AuthControllerTest {
                     .isInstanceOf(InvalidRefreshTokenException.class);
         }
     }
+
+    @Nested
+    class Logout {
+
+        @Test
+        void endsSessionAndReturnsNoContent() {
+            ResponseEntity<Void> response = controller.logout(new RefreshTokenRequest("refresh"));
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            verify(sessionService).endSession("refresh");
+        }
+    }
 }

@@ -122,4 +122,15 @@ class AuthSessionFlowTest {
                 .expectBody()
                 .jsonPath("$.errors[0].field").isEqualTo("refreshToken");
     }
+
+    @Test
+    void logout_revokesTheRefreshToken_andIsIdempotent() {
+        LoginResponse session = login();
+
+        post("/api/auth/logout", session.refreshToken()).expectStatus().isNoContent();
+        post("/api/auth/logout", session.refreshToken()).expectStatus().isNoContent();
+
+        post("/api/auth/refresh", session.refreshToken()).expectStatus().isUnauthorized();
+        assertThat(refreshTokenRepository.count()).isZero();
+    }
 }
