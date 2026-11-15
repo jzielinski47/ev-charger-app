@@ -1,0 +1,69 @@
+$kind: graphql-request
+name: Fetch Compatible Chargers Near Krakow
+description: Lists chargers within 15 km of Krakow that have at least one connector compatible with the vehicle from Vehicles → Add Vehicle (CCS2 + TYPE_2 inlets). The vehicle must belong to the logged-in user.
+url: "{{baseUrl}}/graphql/chargers"
+query: |
+  query AllChargerPointsInProximity($vehicleId: ID) {
+      allChargerPointsInProximity(lat: 50.0748, lon: 19.9979, proximity: 15.0, vehicleId: $vehicleId) {
+          id
+          isOperational
+          usageCost
+          numberOfPoints
+          dateLastVerified
+          dateLastConfirmed
+          operator {
+              id
+              name
+              websiteUrl
+              phone
+              email
+              faultReportEmail
+          }
+          dataProvider {
+              license
+          }
+          addressInfo {
+              title
+              latitude
+              longitude
+          }
+          connections {
+              connectorType
+              currentType
+              powerKW
+          }
+      }
+  }
+variables: |-
+  {
+    "vehicleId": "{{vehicleId}}"
+  }
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      const chargers = (body.data && body.data.allChargerPointsInProximity) || [];
+      const compatibleConnectors = ["CCS2", "TYPE_2", "TYPE_2_SOCKET_ONLY", "TYPE_2_TETHERED"];
+
+      pm.test("vehicleId is set", () => {
+          pm.expect(pm.collectionVariables.get("vehicleId"), "run Vehicles → Add Vehicle first").to.not.be.empty;
+      });
+
+      pm.test("query succeeds without errors", () => {
+          pm.response.to.have.status(200);
+          pm.expect(body.errors).to.be.undefined;
+          pm.expect(body.data.allChargerPointsInProximity).to.be.an("array");
+      });
+
+      pm.test("every charger has a connector compatible with the vehicle", () => {
+          chargers.forEach(c => pm.expect(
+              c.connections.some(conn => compatibleConnectors.includes(conn.connectorType)),
+              `charger ${c.id} has no compatible connector`
+          ).to.be.true);
+      });
+    language: text/javascript
+settings: {}
+schema:
+  source: file
+  location: /home/jzielinski/SoftwareDevelopment/ev-charger-map/src/main/resources/graphql/schema.graphqls
+order: 4000
