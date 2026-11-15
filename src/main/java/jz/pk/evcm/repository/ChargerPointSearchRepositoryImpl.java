@@ -21,7 +21,7 @@ class ChargerPointSearchRepositoryImpl implements ChargerPointSearchRepository {
             FROM charger_point cp
             JOIN address_info a ON a.id = cp.address_info_id
             CROSS JOIN LATERAL (
-                SELECT COUNT(*) AS matching
+                SELECT COUNT(*) AS matching, MAX(c.powerkw) AS max_power
                 FROM connection c
                 WHERE c.charger_point_id = cp.charger_point_id
                   AND (:anyConnector OR c.connector_type IN (:connectorTypes))
@@ -37,8 +37,11 @@ class ChargerPointSearchRepositoryImpl implements ChargerPointSearchRepository {
             """.formatted(REFERENCE_POINT);
 
     private static final String ORDER_AND_PAGE = """
-            ORDER BY ST_DistanceSphere(a.location, %s), cp.charger_point_id
-            LIMIT :limit
+            ORDER BY CASE WHEN :sort = 'POWER' THEN m.max_power END DESC NULLS LAST,
+                     CASE WHEN :sort = 'POINTS' THEN cp.number_of_points END DESC NULLS LAST,
+                     ST_DistanceSphere(a.location, %s),
+                     cp.charger_point_id
+            LIMIT :limit OFFSET :offset
             """.formatted(REFERENCE_POINT);
 
     @PersistenceContext
@@ -64,7 +67,9 @@ class ChargerPointSearchRepositoryImpl implements ChargerPointSearchRepository {
                 .setParameter("anyCurrent", criteria.currentTypes() == null)
                 .setParameter("currentTypes", names(criteria.currentTypes()))
                 .setParameter("operationalOnly", criteria.operationalOnly())
+                .setParameter("sort", criteria.sort().name())
                 .setParameter("limit", criteria.limit())
+                .setParameter("offset", criteria.offset())
                 .getResultList();
     }
 

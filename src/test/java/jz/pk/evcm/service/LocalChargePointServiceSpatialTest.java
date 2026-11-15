@@ -1,5 +1,6 @@
 package jz.pk.evcm.service;
 
+import jz.pk.evcm.dto.req.local.ChargerSearchOptions;
 import jz.pk.evcm.dto.res.ChargerPointResponse;
 import jz.pk.evcm.entity.AddressInfo;
 import jz.pk.evcm.entity.ChargerPoint;
@@ -46,7 +47,7 @@ class LocalChargePointServiceSpatialTest {
     void findsChargerNearEastEdgeOfRadiusAtHighLatitude() {
         persistChargerAt(1L, 1.3134943103101826, 70.00300179266618);
 
-        List<ChargerPointResponse> results = service.getAllChargersInProximity(70.0, 0.0, 50.0, null, null, null);
+        List<ChargerPointResponse> results = service.getAllChargersInProximity(70.0, 0.0, 50.0, null, null, ChargerSearchOptions.DEFAULTS);
 
         assertThat(results).extracting(ChargerPointResponse::id).containsExactly(1L);
     }
@@ -55,7 +56,7 @@ class LocalChargePointServiceSpatialTest {
     void excludesChargerJustBeyondRadius() {
         persistChargerAt(1L, 1.33, 70.0); // ~50.6 km east
 
-        List<ChargerPointResponse> results = service.getAllChargersInProximity(70.0, 0.0, 50.0, null, null, null);
+        List<ChargerPointResponse> results = service.getAllChargersInProximity(70.0, 0.0, 50.0, null, null, ChargerSearchOptions.DEFAULTS);
 
         assertThat(results).isEmpty();
     }

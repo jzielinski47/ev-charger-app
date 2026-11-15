@@ -1,6 +1,8 @@
 package jz.pk.evcm.controller.app;
 
 import jz.pk.evcm.dto.req.local.ChargerFilter;
+import jz.pk.evcm.dto.req.local.ChargerSearchOptions;
+import jz.pk.evcm.dto.req.local.ChargerSort;
 import jz.pk.evcm.dto.res.ChargerPointResponse;
 import jz.pk.evcm.service.LocalChargePointService;
 import lombok.AllArgsConstructor;
@@ -26,10 +28,12 @@ public class ChargePointController {
     @QueryMapping
     public List<ChargerPointResponse> allChargerPointsInProximity(@Argument Double lat, @Argument Double lon,
                                                                   @Argument Double proximity, @Argument Long vehicleId,
-                                                                  @Argument ChargerFilter filter,
+                                                                  @Argument ChargerFilter filter, @Argument ChargerSort sort,
+                                                                  @Argument Integer limit, @Argument Integer offset,
                                                                   @AuthenticationPrincipal UserDetails principal) {
         String ownerEmail = principal != null ? principal.getUsername() : null;
-        return chargePointService.getAllChargersInProximity(lat, lon, proximity, vehicleId, ownerEmail, filter);
+        return chargePointService.getAllChargersInProximity(lat, lon, proximity, vehicleId, ownerEmail,
+                new ChargerSearchOptions(filter, sort, limit, offset));
     }
 
 }

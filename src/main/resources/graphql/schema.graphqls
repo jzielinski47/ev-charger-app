@@ -1,7 +1,14 @@
 type Query {
     chargerPointById(id: ID!): ChargerPoint
     allChargerPointsInProximity(lat: Float!, lon: Float!, proximity: Float!, vehicleId: ID,
-                                filter: ChargerFilter): [ChargerPoint!]!
+                                filter: ChargerFilter, sort: ChargerSort = DISTANCE,
+                                limit: Int = 100, offset: Int = 0): [ChargerPoint!]!
+}
+
+enum ChargerSort {
+    DISTANCE
+    POWER
+    POINTS
 }
 
 input ChargerFilter {

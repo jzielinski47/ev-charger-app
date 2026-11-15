@@ -1,5 +1,6 @@
 package jz.pk.evcm.repository;
 
+import jz.pk.evcm.dto.req.local.ChargerSort;
 import jz.pk.evcm.entity.AddressInfo;
 import jz.pk.evcm.entity.ChargerPoint;
 import jz.pk.evcm.entity.Connection;
@@ -78,11 +79,11 @@ class ChargerPointRepositoryTest {
     }
 
     private static ChargerSearchCriteria anyCharger(int limit) {
-        return new ChargerSearchCriteria(null, null, false, limit);
+        return new ChargerSearchCriteria(null, null, false, ChargerSort.DISTANCE, limit, 0);
     }
 
     private static ChargerSearchCriteria withConnectors(Set<ConnectorType> connectorTypes, int limit) {
-        return new ChargerSearchCriteria(connectorTypes, null, false, limit);
+        return new ChargerSearchCriteria(connectorTypes, null, false, ChargerSort.DISTANCE, limit, 0);
     }
 
     private static List<Long> ids(ChargerPoint... chargers) {
@@ -188,7 +189,7 @@ class ChargerPointRepositoryTest {
             ChargerPoint mixed = createChargerAt(0.0, 0.02, TYPE_2, CHADEMO);
             createChargerAt(0.0, 0.03, TYPE_2);
 
-            assertThat(search(new ChargerSearchCriteria(null, Set.of(CurrentType.DC), false, 10)))
+            assertThat(search(new ChargerSearchCriteria(null, Set.of(CurrentType.DC), false, ChargerSort.DISTANCE, 10, 0)))
                     .containsExactlyElementsOf(ids(dc, mixed));
         }
 
@@ -197,7 +198,7 @@ class ChargerPointRepositoryTest {
             createChargerAt(0.0, 0.01, TYPE_2, CHADEMO);
             ChargerPoint dcCcs = createChargerAt(0.0, 0.02, CCS2);
 
-            assertThat(search(new ChargerSearchCriteria(Set.of(TYPE_2, CCS2), Set.of(CurrentType.DC), false, 10)))
+            assertThat(search(new ChargerSearchCriteria(Set.of(TYPE_2, CCS2), Set.of(CurrentType.DC), false, ChargerSort.DISTANCE, 10, 0)))
                     .containsExactlyElementsOf(ids(dcCcs));
         }
 
@@ -209,8 +210,71 @@ class ChargerPointRepositoryTest {
             broken.setIsOperational(false);
             createChargerAt(0.0, 0.03);
 
-            assertThat(search(new ChargerSearchCriteria(null, null, true, 10)))
+            assertThat(search(new ChargerSearchCriteria(null, null, true, ChargerSort.DISTANCE, 10, 0)))
                     .containsExactlyElementsOf(ids(operational));
+        }
+    }
+
+    private static void setPowers(ChargerPoint charger, double... powersKw) {
+        for (int i = 0; i < powersKw.length; i++) {
+            charger.getConnections().get(i).setPowerKW(powersKw[i]);
+        }
+    }
+
+    private static ChargerSearchCriteria sorted(ChargerSort sort, Set<ConnectorType> connectorTypes, int limit, int offset) {
+        return new ChargerSearchCriteria(connectorTypes, null, false, sort, limit, offset);
+    }
+
+    @Nested
+    class SortingAndPagingTests {
+
+        @Test
+        void powerSort_ordersByStrongestConnection_withUnknownPowerLast() {
+            ChargerPoint slowNear = createChargerAt(0.0, 0.01, TYPE_2);
+            setPowers(slowNear, 22.0);
+            ChargerPoint unknownNearest = createChargerAt(0.0, 0.005, TYPE_2);
+            ChargerPoint fastFar = createChargerAt(0.0, 0.05, TYPE_2, CCS2);
+            setPowers(fastFar, 11.0, 150.0);
+
+            assertThat(search(sorted(ChargerSort.POWER, null, 10, 0)))
+                    .containsExactlyElementsOf(ids(fastFar, slowNear, unknownNearest));
+        }
+
+        @Test
+        void powerSort_withConnectorFilter_ignoresIncompatibleConnections() {
+            ChargerPoint ccsOnly = createChargerAt(0.0, 0.02, CCS2);
+            setPowers(ccsOnly, 50.0);
+            ChargerPoint mixed = createChargerAt(0.0, 0.01, TYPE_2, CHADEMO);
+            setPowers(mixed, 22.0, 100.0);
+
+            assertThat(search(sorted(ChargerSort.POWER, Set.of(CCS2, TYPE_2), 10, 0)))
+                    .containsExactlyElementsOf(ids(ccsOnly, mixed));
+        }
+
+        @Test
+        void pointsSort_ordersByNumberOfPoints_thenDistance() {
+            ChargerPoint twoNear = createChargerAt(0.0, 0.01);
+            twoNear.setNumberOfPoints(2);
+            ChargerPoint unknown = createChargerAt(0.0, 0.005);
+            ChargerPoint sixFar = createChargerAt(0.0, 0.05);
+            sixFar.setNumberOfPoints(6);
+            ChargerPoint twoFar = createChargerAt(0.0, 0.03);
+            twoFar.setNumberOfPoints(2);
+
+            assertThat(search(sorted(ChargerSort.POINTS, null, 10, 0)))
+                    .containsExactlyElementsOf(ids(sixFar, twoNear, twoFar, unknown));
+        }
+
+        @Test
+        void offset_skipsAlreadyReturnedChargers() {
+            createChargerAt(0.0, 0.01);
+            createChargerAt(0.0, 0.02);
+            ChargerPoint third = createChargerAt(0.0, 0.03);
+            ChargerPoint fourth = createChargerAt(0.0, 0.04);
+
+            assertThat(search(sorted(ChargerSort.DISTANCE, null, 2, 2)))
+                    .containsExactlyElementsOf(ids(third, fourth));
+            assertThat(search(sorted(ChargerSort.DISTANCE, null, 2, 4))).isEmpty();
         }
     }
 

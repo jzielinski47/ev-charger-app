@@ -12,6 +12,14 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 public class GraphQlErrorHandler {
 
     @GraphQlExceptionHandler
+    public GraphQLError handleInvalidSearchArgument(InvalidSearchArgumentException ex, DataFetchingEnvironment env) {
+        return GraphqlErrorBuilder.newError(env)
+                .errorType(ErrorType.BAD_REQUEST)
+                .message(ex.getMessage())
+                .build();
+    }
+
+    @GraphQlExceptionHandler
     public GraphQLError handleNotFound(EntityNotFoundException ex, DataFetchingEnvironment env) {
         return GraphqlErrorBuilder.newError(env)
                 .errorType(ErrorType.NOT_FOUND)

@@ -1,5 +1,6 @@
 package jz.pk.evcm.repository;
 
+import jz.pk.evcm.dto.req.local.ChargerSort;
 import jz.pk.evcm.entity.ConnectorType;
 import jz.pk.evcm.entity.CurrentType;
 
@@ -9,6 +10,8 @@ public record ChargerSearchCriteria(
         Set<ConnectorType> connectorTypes,
         Set<CurrentType> currentTypes,
         boolean operationalOnly,
-        int limit
+        ChargerSort sort,
+        int limit,
+        int offset
 ) {
 }

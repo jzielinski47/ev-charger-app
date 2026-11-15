@@ -173,6 +173,45 @@ class ChargePointGraphQlTest {
                 .containsExactly(operationalAc);
     }
 
+    private GraphQlTester.Response queryPage(String sort, Integer limit, Integer offset) {
+        return graphQlTester.document("""
+                        query($lat: Float!, $lon: Float!, $proximity: Float!, $sort: ChargerSort, $limit: Int, $offset: Int) {
+                          allChargerPointsInProximity(lat: $lat, lon: $lon, proximity: $proximity,
+                                                      sort: $sort, limit: $limit, offset: $offset) {
+                            id
+                          }
+                        }
+                        """)
+                .variable("lat", KRAKOW_LAT)
+                .variable("lon", KRAKOW_LON)
+                .variable("proximity", RADIUS_KM)
+                .variable("sort", sort)
+                .variable("limit", limit)
+                .variable("offset", offset)
+                .execute();
+    }
+
+    @Test
+    void pointsSortWithPaging_returnsTheRequestedPage() {
+        long one = saveChargerNearKrakow(0.01, TYPE_2);
+        long three = saveChargerNearKrakow(0.02, TYPE_2);
+        long two = saveChargerNearKrakow(0.03, TYPE_2);
+        chargerPointRepository.findAllById(List.of(one, two, three)).forEach(charger -> {
+            charger.setNumberOfPoints(charger.getId() == one ? 1 : charger.getId() == two ? 2 : 3);
+            chargerPointRepository.save(charger);
+        });
+
+        queryPage("POINTS", 2, 1)
+                .path("allChargerPointsInProximity[*].id").entityList(Long.class)
+                .containsExactly(two, one);
+    }
+
+    @Test
+    void limitAboveMaximum_isBadRequest() {
+        assertSingleError(queryPage(null, 501, null), ErrorType.BAD_REQUEST, "limit must be between 1 and 500");
+        assertSingleError(queryPage(null, null, -1), ErrorType.BAD_REQUEST, "offset must not be negative");
+    }
+
     private GraphQlTester.Response queryChargerById(long id) {
         return graphQlTester.document("""
                         query($id: ID!) {
