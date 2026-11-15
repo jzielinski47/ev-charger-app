@@ -36,9 +36,8 @@ public class User implements UserDetails {
     @Builder.Default
     private Boolean isNonLocked = true;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 32)
-    private UserAvatar avatar;
+    @Column(name = "avatar_seed", length = 64)
+    private String avatarSeed;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(

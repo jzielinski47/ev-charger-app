@@ -95,7 +95,7 @@ A missing, invalid or expired token on a protected endpoint returns `401`; a val
 | Access level | Endpoints |
 |---|---|
 | Public | `/api/auth/**`, `/graphql/chargers`, Swagger / OpenAPI docs |
-| Authenticated (`USER` or `ADMIN`) | `/api/vehicles/**` |
+| Authenticated (`USER` or `ADMIN`) | `/api/users/me/**`, `/api/vehicles/**` |
 | Admin only (`ADMIN`) | `/api/admin/**` |
 
 ### Rate Limiting
@@ -199,6 +199,32 @@ Response `200 OK` with the same body as login. The submitted refresh token is re
 **`POST /api/auth/logout`**
 
 Same body as refresh. Response `204 No Content`, also when the token was already revoked. Errors: `400` validation failed.
+
+#### Current user — `/api/users/me`
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/users/me` | Profile of the logged-in user |
+| `PUT` | `/api/users/me` | Change name and surname |
+| `PUT` | `/api/users/me/password` | Change password |
+| `PUT` | `/api/users/me/avatar` | Set or clear the DiceBear avatar seed |
+| `DELETE` | `/api/users/me` | Delete the account |
+
+`GET`, `PUT /api/users/me` and `PUT /api/users/me/avatar` return the profile:
+
+```json
+{ "id": 1, "name": "Jan", "surname": "Kowalski", "email": "jan@example.com", "roles": ["USER"], "avatarSeed": "Felix-42" }
+```
+
+**`PUT /api/users/me`**: `{ "name": "Jan", "surname": "Kowalski" }`, both required, max 255 chars. The e-mail cannot be changed.
+
+**`PUT /api/users/me/password`**: `{ "currentPassword": "secret123", "newPassword": "newSecret456" }`, `newPassword` 8–255 chars. Revokes every refresh token of the user (other devices are logged out at their next refresh) and returns a new token pair with the same body as login. A wrong `currentPassword` returns `400` with a field error on `currentPassword`.
+
+**`PUT /api/users/me/avatar`**: `{ "seed": "Felix-42" }`. The frontend renders the avatar with DiceBear from this seed; the backend only stores it. The seed is 1–64 characters of letters, digits, `-` or `_`; `null` (or `{}`) clears it and the frontend falls back to initials. Do not derive the seed from personal data such as the e-mail, since it is sent to the DiceBear API.
+
+**`DELETE /api/users/me`**: `{ "password": "secret123" }`. Returns `204 No Content` and permanently deletes the user, their vehicles and refresh tokens. A wrong password returns `400` with a field error on `password`; deleting the last admin returns `409`.
+
+Errors on all endpoints: `400` validation failed, `401` missing, invalid or expired token.
 
 #### Vehicles — `/api/vehicles`
 
