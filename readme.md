@@ -220,7 +220,7 @@ Optional query parameter `targetEmail` on `GET /api/vehicles` and `POST /api/veh
 
 `DELETE` returns `200 OK` with an empty body.
 
-Errors: `400` validation failed, `401` missing/invalid token, `403` `targetEmail` used by a non-admin, `404` vehicle does not exist or belongs to another user.
+Errors: `400` validation failed, `403` missing/expired token or `targetEmail` used by a non-admin, `404` vehicle does not exist or belongs to another user.
 
 **Vehicle inlets** and the charger connectors they are compatible with (used by the GraphQL `vehicleId` filter):
 
@@ -241,7 +241,7 @@ Admin-only tools for working directly with [Open Charge Map](https://openchargem
 | `GET` | `/api/admin/chargers` | Preview raw OCM chargers within 10 km of `50.0, 20.0`; nothing is saved |
 | `POST` | `/api/admin/chargers/save?latitude={lat}&longitude={lon}&distance={km}` | Fetch up to 100 OCM chargers around a point and save them to the local database |
 
-Both return the raw OCM charger list. Errors: `401` / `403` when not an admin, `500` when OCM returns no data.
+Both return the raw OCM charger list. Errors: `403` when not logged in as an admin, `500` when OCM returns no data.
 
 ### GraphQL API
 
