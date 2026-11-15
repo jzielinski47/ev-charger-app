@@ -1,8 +1,17 @@
 $kind: http-request
 name: Admin Preview OCM Chargers
-description: Fetches chargers from OpenChargeMap without saving (hardcoded lat=50.0, lon=20.0, radius=10km). Requires Login Admin.
+description: Fetches up to 50 chargers from OpenChargeMap within 10 km of Krakow without saving. Requires Login Admin.
 method: GET
-url: "{{baseUrl}}/api/admin/chargers"
+url: "{{baseUrl}}/api/admin/chargers?latitude=50.0614&longitude=19.9366&distance=10&maxResults=50"
+queryParams:
+  - key: latitude
+    value: "50.0614"
+  - key: longitude
+    value: "19.9366"
+  - key: distance
+    value: "10"
+  - key: maxResults
+    value: "50"
 auth:
   type: bearer
   credentials:
@@ -16,6 +25,7 @@ scripts:
       pm.test("returns chargers", () => {
           pm.response.to.have.status(200);
           pm.expect(chargers).to.be.an("array").that.is.not.empty;
+          pm.expect(chargers.length).to.be.at.most(50);
       });
 
       pm.test("each charger has the OCM detail fields", () => {

@@ -1,0 +1,27 @@
+$kind: http-request
+name: Get Brand Models
+description: Public model presets of one brand; the fields match the Add Vehicle body.
+method: GET
+url: "{{baseUrl}}/api/catalog/brands/tesla/models"
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      const models = pm.response.json();
+
+      pm.test("returns model presets", () => {
+          pm.response.to.have.status(200);
+          pm.expect(models).to.be.an("array").that.is.not.empty;
+          models.forEach(m => pm.expect(m).to.include.all.keys(
+              "id", "name", "supportedInlets", "batteryCapacityKwh", "maxAcPowerKw", "maxDcPowerKw", "acPhases"));
+      });
+
+      pm.sendRequest({ url: pm.variables.replaceIn("{{baseUrl}}/api/catalog/brands/unknown/models"), method: "GET" }, (err, res) => {
+          pm.test("unknown brand returns 404", () => {
+              pm.expect(err).to.be.null;
+              pm.expect(res.code).to.equal(404);
+          });
+      });
+    language: text/javascript
+order: 2000

@@ -1,8 +1,8 @@
 $kind: http-request
 name: Admin Fetch and Save Chargers Around Faculty
-description: Fetches chargers from OpenChargeMap around the faculty (radius 15km, max 100) and saves them. Requires Login Admin.
+description: Fetches up to 1000 chargers from OpenChargeMap around the faculty (radius 15 km) and saves them. Returns an import summary. Requires Login Admin.
 method: POST
-url: "{{baseUrl}}/api/admin/chargers/save?latitude=50.07480984825251&longitude=19.99786902616269&distance=15.0"
+url: "{{baseUrl}}/api/admin/chargers/save?latitude=50.07480984825251&longitude=19.99786902616269&distance=15.0&maxResults=1000"
 queryParams:
   - key: latitude
     value: "50.07480984825251"
@@ -10,6 +10,8 @@ queryParams:
     value: "19.99786902616269"
   - key: distance
     value: "15.0"
+  - key: maxResults
+    value: "1000"
 auth:
   type: bearer
   credentials:
@@ -17,12 +19,18 @@ auth:
 scripts:
   - type: afterResponse
     code: |-
-      const chargers = pm.response.json();
+      const summary = pm.response.json();
+      const chargers = summary.pois;
       const isoUtc = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
 
       pm.test("returns chargers", () => {
           pm.response.to.have.status(200);
           pm.expect(chargers).to.be.an("array").that.is.not.empty;
+      });
+
+      pm.test("summary counts add up", () => {
+          pm.expect(summary.imported).to.equal(chargers.length);
+          pm.expect(summary.created + summary.updated).to.equal(summary.imported);
       });
 
       pm.test("each charger has the OCM detail fields", () => {
