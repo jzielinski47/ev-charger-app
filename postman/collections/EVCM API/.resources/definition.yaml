@@ -20,3 +20,6 @@ variables:
   - key: admin_token
     value: ""
     disabled: false
+  - key: rate_limit_token
+    value: ""
+    disabled: false

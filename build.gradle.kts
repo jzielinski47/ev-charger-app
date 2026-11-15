@@ -22,6 +22,7 @@ val jjwtVersion = "0.13.0"
 val mapstructVersion = "1.6.3"
 val jtsVersion = "1.20.0"
 val springdocVersion = "3.2.0"
+val bucket4jVersion = "8.14.0"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
@@ -40,6 +41,9 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-api:$jjwtVersion")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:$jjwtVersion")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:$jjwtVersion")
+
+    implementation("com.bucket4j:bucket4j_jdk17-core:$bucket4jVersion")
+    implementation("com.github.ben-manes.caffeine:caffeine")
 
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")

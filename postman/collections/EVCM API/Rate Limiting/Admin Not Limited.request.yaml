@@ -1,0 +1,37 @@
+$kind: http-request
+name: Admin Not Limited
+description: Admins are exempt from rate limiting. Requires Auth → Login Admin to have been run.
+method: GET
+url: "{{baseUrl}}/api/vehicles"
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("admin request succeeds without rate limit header", () => {
+          pm.response.to.have.status(200);
+          pm.expect(pm.response.headers.has("X-Rate-Limit-Remaining")).to.be.false;
+      });
+
+      const request = {
+          url: pm.variables.replaceIn("{{baseUrl}}/api/vehicles"),
+          method: "GET",
+          header: { Authorization: "Bearer " + pm.collectionVariables.get("admin_token") }
+      };
+      const statuses = [];
+
+      const next = () => pm.sendRequest(request, (err, res) => {
+          statuses.push(res.code);
+          if (statuses.length < 25) {
+              next();
+              return;
+          }
+          pm.test("25 more admin requests are never throttled", () => {
+              pm.expect(statuses.every(code => code === 200)).to.be.true;
+          });
+      });
+      next();
+    language: text/javascript
+order: 3000

@@ -11,6 +11,7 @@ This repository contains the backend service of the application. Currently, it p
 - **Proximity Search:** Built spatial queries (via PostGIS and Hibernate-Spatial) leveraging database spatial indexing to help users instantly find nearby EV charging stations.
 - **Personalized Garage Management:** Developed CRUD operations allowing users to easily add, manage, and set an active vehicle.
 - **Hybrid API Architecture:** Utilized GraphQL for flexible, high-performance charger data retrieval, alongside REST APIs for authentication and vehicle management.
+- **Rate Limiting:** In-memory per-client limits (Bucket4j + Caffeine) protect the server from request floods: anonymous clients get 1 request per minute (keyed by IP), authenticated users 20 per minute (keyed by account), admins, `/api/auth/**` and the API docs are exempt. Exceeding the limit returns `429` with a `Retry-After` header. Limits are configurable via the `rate-limit.*` properties in `application.properties`.
 - **Scheduled Replication (ChargerSync):** Automated a three-hour background sync of OpenChargeAPI data for major Polish cities. Routing client queries directly to this local database eliminates third-party network latency and completely bypasses external rate limits.
 
 ## Technology Stack

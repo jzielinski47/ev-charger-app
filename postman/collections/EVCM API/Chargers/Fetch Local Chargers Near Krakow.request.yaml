@@ -1,10 +1,10 @@
 $kind: graphql-request
 name: Fetch Local Chargers Near Krakow
-description: Remove vehicleId from variables to list all chargers; with it, only chargers compatible with that vehicle (must belong to the logged-in user).
+description: Lists all chargers within 15 km of Krakow, without filtering by vehicle.
 url: "{{baseUrl}}/graphql/chargers"
 query: |
-  query AllChargerPointsInProximity($vehicleId: ID) {
-      allChargerPointsInProximity(lat: 50.0748, lon: 19.9979, proximity: 15.0, vehicleId: $vehicleId) {
+  query AllChargerPointsInProximity {
+      allChargerPointsInProximity(lat: 50.0748, lon: 19.9979, proximity: 15.0) {
           id
           isOperational
           usageCost
@@ -33,10 +33,6 @@ query: |
               powerKW
           }
       }
-  }
-variables: |-
-  {
-    "vehicleId": "{{vehicleId}}"
   }
 scripts:
   - type: afterResponse
