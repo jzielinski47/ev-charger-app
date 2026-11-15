@@ -8,7 +8,7 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "rate-limit")
 public record RateLimitProperties(
         @DefaultValue("true") boolean enabled,
-        @DefaultValue("1") int anonymousCapacity,
+        @DefaultValue("5") int anonymousCapacity,
         @DefaultValue("20") int authenticatedCapacity,
         @DefaultValue("1m") Duration period,
         @DefaultValue("2m") Duration idleEviction
