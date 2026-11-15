@@ -36,6 +36,10 @@ public class User implements UserDetails {
     @Builder.Default
     private Boolean isNonLocked = true;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 32)
+    private UserAvatar avatar;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "user_roles",
