@@ -1,0 +1,58 @@
+$kind: http-request
+name: Authenticated Limit
+description: Authenticated users get 20 requests per minute. Uses a freshly signed-up user so the main test user's quota is untouched.
+method: GET
+url: "{{baseUrl}}/api/vehicles"
+auth:
+  type: bearer
+  credentials:
+    token: "{{rate_limit_token}}"
+scripts:
+  - type: beforeRequest
+    code: |-
+      const email = `ratelimit.${Date.now()}@example.com`;
+      const password = "zaq1@WSX";
+      const json = (path, body) => ({
+          url: pm.variables.replaceIn("{{baseUrl}}") + path,
+          method: "POST",
+          header: { "Content-Type": "application/json" },
+          body: { mode: "raw", raw: JSON.stringify(body) }
+      });
+
+      pm.sendRequest(json("/api/auth/signup", { name: "Rate", surname: "Limit", email, password }), () => {
+          pm.sendRequest(json("/api/auth/login", { email, password }), (err, res) => {
+              pm.collectionVariables.set("rate_limit_token", res.json().token);
+          });
+      });
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("first request succeeds with 19 remaining", () => {
+          pm.response.to.have.status(200);
+          pm.expect(pm.response.headers.get("X-Rate-Limit-Remaining")).to.equal("19");
+      });
+
+      const request = {
+          url: pm.variables.replaceIn("{{baseUrl}}/api/vehicles"),
+          method: "GET",
+          header: { Authorization: "Bearer " + pm.collectionVariables.get("rate_limit_token") }
+      };
+      const statuses = [];
+
+      const next = () => pm.sendRequest(request, (err, res) => {
+          statuses.push(res.code);
+          if (statuses.length < 20) {
+              next();
+              return;
+          }
+          pm.test("requests 2-20 succeed", () => {
+              pm.expect(statuses.slice(0, 19).every(code => code === 200)).to.be.true;
+          });
+          pm.test("21st request returns 429 with Retry-After", () => {
+              pm.expect(res.code).to.equal(429);
+              pm.expect(Number(res.headers.get("Retry-After"))).to.be.within(1, 60);
+          });
+      });
+      next();
+    language: text/javascript
+order: 2000

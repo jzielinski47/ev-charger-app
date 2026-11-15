@@ -1,0 +1,28 @@
+$kind: http-request
+name: Anonymous Limit
+description: Anonymous clients get 1 request per minute per IP. The second request in a row must be rejected with 429.
+method: GET
+url: "{{baseUrl}}/api/vehicles"
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("first anonymous request is denied by security or already throttled", () => {
+          pm.expect(pm.response.code).to.be.oneOf([403, 429]);
+      });
+
+      pm.sendRequest({ url: pm.variables.replaceIn("{{baseUrl}}/api/vehicles"), method: "GET" }, (err, res) => {
+          pm.test("second anonymous request returns 429", () => {
+              pm.expect(err).to.be.null;
+              pm.expect(res.code).to.equal(429);
+          });
+
+          pm.test("429 has Retry-After and JSON error body", () => {
+              const retryAfter = Number(res.headers.get("Retry-After"));
+              pm.expect(retryAfter).to.be.within(1, 60);
+              pm.expect(res.json().error).to.equal("Too Many Requests");
+          });
+      });
+    language: text/javascript
+order: 1000
