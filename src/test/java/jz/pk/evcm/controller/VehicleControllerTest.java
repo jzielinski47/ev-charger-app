@@ -1,6 +1,7 @@
 package jz.pk.evcm.controller;
 
 import jz.pk.evcm.entity.User;
+import jz.pk.evcm.entity.UserRole;
 import jz.pk.evcm.entity.VehicleInlet;
 import jz.pk.evcm.repository.UserRepository;
 import jz.pk.evcm.repository.VehicleRepository;
@@ -138,6 +139,24 @@ class VehicleControllerTest {
     void getVehicles_withoutToken_isRejected() {
         webTestClient.get().uri("/api/vehicles")
                 .exchange()
-                .expectStatus().isForbidden();
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    void getVehicles_asAdmin_listsEveryVehicleWithItsOwner() {
+        User owner = saveUser("owner@test.dev");
+        long vehicleId = saveVehicle(owner);
+        User admin = User.builder().email("vehicle-admin@test.dev").name("Ada").surname("Admin").password("1234").build();
+        admin.assignRole(UserRole.ADMIN);
+        admin = userRepository.save(admin);
+        createdUsers.add(admin);
+
+        webTestClient.get().uri("/api/vehicles")
+                .header(HttpHeaders.AUTHORIZATION, bearer(admin))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$[?(@.id == %d)].ownerEmail".formatted(vehicleId)).isEqualTo("owner@test.dev")
+                .jsonPath("$[?(@.id == %d)].ownerName".formatted(vehicleId)).isEqualTo("name sur");
     }
 }

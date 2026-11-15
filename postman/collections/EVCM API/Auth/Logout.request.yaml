@@ -1,0 +1,33 @@
+$kind: http-request
+name: Logout
+description: Revokes the current refresh token. The access token stays valid until it expires.
+method: POST
+url: "{{baseUrl}}/api/auth/logout"
+auth:
+  type: noauth
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "refreshToken": "{{refreshToken}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("logged out", () => pm.response.to.have.status(204));
+
+      pm.sendRequest({
+          url: pm.variables.replaceIn("{{baseUrl}}/api/auth/refresh"),
+          method: "POST",
+          header: { "Content-Type": "application/json" },
+          body: { mode: "raw", raw: JSON.stringify({ refreshToken: pm.collectionVariables.get("refreshToken") }) }
+      }, (err, res) => {
+          pm.test("revoked refresh token is rejected with 401", () => {
+              pm.expect(err).to.be.null;
+              pm.expect(res.code).to.equal(401);
+          });
+      });
+    language: text/javascript
+order: 2600

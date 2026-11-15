@@ -44,13 +44,7 @@ public class AuthService {
         user.assignRole(UserRole.USER);
 
         User savedUser = userRepository.save(user);
-        return new UserResponse(
-                savedUser.getId(),
-                savedUser.getName(),
-                savedUser.getSurname(),
-                savedUser.getEmail(),
-                savedUser.getRoles()
-        );
+        return new UserResponse(savedUser);
     }
 
     public User authenticate(LoginUserDto inputDto) {

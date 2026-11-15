@@ -59,7 +59,7 @@ class RateLimitIntegrationTest {
 
     @Test
     void limitsAnonymousAndAuthenticatedRequests_butNotAdmins() {
-        getVehicles(null).expectStatus().isForbidden();
+        getVehicles(null).expectStatus().isUnauthorized();
         getVehicles(null)
                 .expectStatus().isEqualTo(429)
                 .expectHeader().exists(HttpHeaders.RETRY_AFTER)

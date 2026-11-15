@@ -18,7 +18,9 @@ public record VehicleResponse(
         Double maxAcPowerKw,
         Double maxDcPowerKw,
         Integer acPhases,
-        Long ownerId
+        Long ownerId,
+        String ownerEmail,
+        String ownerName
 ) {
     public VehicleResponse(Vehicle vehicle) {
         this(
@@ -32,7 +34,9 @@ public record VehicleResponse(
                 vehicle.getMaxAcPowerKw(),
                 vehicle.getMaxDcPowerKw(),
                 vehicle.getAcPhases(),
-                vehicle.getOwner() != null ? vehicle.getOwner().getId() : null
+                vehicle.getOwner() != null ? vehicle.getOwner().getId() : null,
+                vehicle.getOwner() != null ? vehicle.getOwner().getEmail() : null,
+                vehicle.getOwner() != null ? (vehicle.getOwner().getName() + " " + vehicle.getOwner().getSurname()).trim() : null
         );
     }
 }
