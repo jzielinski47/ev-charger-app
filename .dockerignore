@@ -2,6 +2,9 @@
 .gradle
 .idea
 *.iml
-build/*
-!build/libs/*.jar
+build
 postman
+.env
+.env.*
+Claude.md
+docs/plans/

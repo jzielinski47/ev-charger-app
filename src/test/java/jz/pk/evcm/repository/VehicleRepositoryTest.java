@@ -3,6 +3,8 @@ package jz.pk.evcm.repository;
 import jz.pk.evcm.entity.User;
 import jz.pk.evcm.entity.Vehicle;
 import jz.pk.evcm.testdata.TestContainersConfig;
+import org.hibernate.SessionFactory;
+import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,15 +16,16 @@ import org.springframework.context.annotation.Import;
 import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.time.Year;
+import java.util.EnumSet;
 import java.util.List;
 
-import static jz.pk.evcm.entity.ConnectorType.*;
+import static jz.pk.evcm.entity.VehicleInlet.*;
 import static jz.pk.evcm.testdata.TestVehicleDefaults.aVehicle;
 import static jz.pk.evcm.testdata.TestVehicleDefaults.aVehicleOwnedBy;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-@DataJpaTest
+@DataJpaTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import(TestContainersConfig.class)
 public class VehicleRepositoryTest {
@@ -43,8 +46,8 @@ public class VehicleRepositoryTest {
     class Mapping {
 
         @Test
-        void persistsAllFieldsAndConnectors() throws SQLException {
-            Vehicle vehicle = aVehicle().supportedConnectorTypes(List.of(TYPE_1, TYPE_2_TETHERED, CCS2)).build();
+        void persistsAllFieldsAndInlets() throws SQLException {
+            Vehicle vehicle = aVehicle().supportedInlets(EnumSet.of(TYPE_1, TYPE_2, CCS2)).build();
 
             Vehicle insertedVehicle = vehicleRepository.save(vehicle);
             em.flush();
@@ -56,8 +59,31 @@ public class VehicleRepositoryTest {
             assertThat(reloadedVehicle.getBrand()).isEqualTo("Tesla");
             assertThat(reloadedVehicle.getModel()).isEqualTo("Model Y");
             assertThat(reloadedVehicle.getYearOfProduction()).isEqualTo(Year.of(2026));
-            assertThat(reloadedVehicle.getSupportedConnectorTypes())
-                    .containsExactlyInAnyOrder(TYPE_1, TYPE_2_TETHERED, CCS2);
+            assertThat(reloadedVehicle.getSupportedInlets())
+                    .containsExactlyInAnyOrder(TYPE_1, TYPE_2, CCS2);
+        }
+    }
+
+    @Nested
+    class InletsFetching {
+
+        @Test
+        void loadsInletsOfManyVehiclesInOneBatch() {
+            User john = persistUser("john@test.dev");
+            em.persist(aVehicleOwnedBy(john).supportedInlets(EnumSet.of(CCS2)).build());
+            em.persist(aVehicleOwnedBy(john).supportedInlets(EnumSet.of(TYPE_2)).build());
+            em.persist(aVehicleOwnedBy(john).supportedInlets(EnumSet.of(CHADEMO, TYPE_2)).build());
+            em.flush();
+            em.clear();
+
+            Statistics statistics = em.getEntityManager().getEntityManagerFactory()
+                    .unwrap(SessionFactory.class).getStatistics();
+            statistics.clear();
+
+            vehicleRepository.findByOwnerEmail("john@test.dev")
+                    .forEach(vehicle -> vehicle.getSupportedInlets().size());
+
+            assertThat(statistics.getPrepareStatementCount()).isEqualTo(2);
         }
     }
 

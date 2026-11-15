@@ -2,9 +2,10 @@ package jz.pk.evcm.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.Year;
-import java.util.List;
+import java.util.Set;
 
 @Entity
 @Builder
@@ -24,13 +25,16 @@ public class Vehicle {
     private String brand;
     private String model;
     private Year yearOfProduction;
+
+    @Enumerated(EnumType.STRING)
     private VehicleOriginatingMarket vehicleOriginatingMarket;
 
-    @ElementCollection(targetClass = ConnectorType.class)
+    @BatchSize(size = 100)
+    @ElementCollection(targetClass = VehicleInlet.class)
     @Enumerated(EnumType.STRING)
-    @CollectionTable(name = "vehicle_connector_types", joinColumns = @JoinColumn(name = "vehicle_id"))
-    @Column(name = "connector_type")
-    private List<ConnectorType> supportedConnectorTypes;
+    @CollectionTable(name = "vehicle_inlets", joinColumns = @JoinColumn(name = "vehicle_id"))
+    @Column(name = "inlet")
+    private Set<VehicleInlet> supportedInlets;
 
     private Double batteryCapacityKwh;
     private Double maxAcPowerKw;

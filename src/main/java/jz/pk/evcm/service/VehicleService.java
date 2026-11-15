@@ -3,20 +3,19 @@ package jz.pk.evcm.service;
 import jakarta.persistence.EntityNotFoundException;
 import jz.pk.evcm.dto.req.local.VehicleRequest;
 import jz.pk.evcm.dto.res.VehicleResponse;
-import jz.pk.evcm.entity.ConnectorType;
 import jz.pk.evcm.entity.User;
 import jz.pk.evcm.entity.Vehicle;
 import jz.pk.evcm.exception.ForbiddenAccessException;
-import jz.pk.evcm.repository.UserRepository;
 import jz.pk.evcm.repository.VehicleRepository;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class VehicleService {
 
     private final VehicleRepository vehicleRepository;
@@ -46,6 +45,7 @@ public class VehicleService {
         return new VehicleResponse(vehicle);
     }
 
+    @Transactional
     public VehicleResponse addVehicle(
             VehicleRequest dto,
             String currentUserEmail,
@@ -58,31 +58,39 @@ public class VehicleService {
         User owner = userService.getUserByEmail(ownerEmail);
 
         Vehicle newVehicle = new Vehicle();
-        newVehicle.setBrand(dto.brand());
-        newVehicle.setModel(dto.model());
-        newVehicle.setYearOfProduction(dto.yearOfProduction());
-        newVehicle.setSupportedConnectorTypes(dto.supportedConnectorTypes());
+        applyRequest(newVehicle, dto);
         newVehicle.setOwner(owner);
 
         Vehicle savedVehicle = vehicleRepository.save(newVehicle);
         return new VehicleResponse(savedVehicle);
     }
 
+    @Transactional
     public VehicleResponse modifyVehicle(Long vehicleId, VehicleRequest dto, String currentUserEmail, boolean isAdmin) {
 
         Vehicle vehicle = getAccessibleVehicle(vehicleId, currentUserEmail, isAdmin);
 
-        vehicle.setBrand(dto.brand());
-        vehicle.setModel(dto.model());
-        vehicle.setYearOfProduction(dto.yearOfProduction());
-        vehicle.setSupportedConnectorTypes(dto.supportedConnectorTypes());
+        applyRequest(vehicle, dto);
         Vehicle updatedVehicle = vehicleRepository.save(vehicle);
         return new VehicleResponse(updatedVehicle);
     }
 
+    @Transactional
     public void deleteVehicle(Long vehicleId, String userEmail, boolean isAdmin) {
         Vehicle vehicle = getAccessibleVehicle(vehicleId, userEmail, isAdmin);
         vehicleRepository.delete(vehicle);
+    }
+
+    private static void applyRequest(Vehicle vehicle, VehicleRequest dto) {
+        vehicle.setBrand(dto.brand());
+        vehicle.setModel(dto.model());
+        vehicle.setYearOfProduction(dto.yearOfProduction());
+        vehicle.setSupportedInlets(dto.supportedInlets());
+        vehicle.setVehicleOriginatingMarket(dto.vehicleOriginatingMarket());
+        vehicle.setBatteryCapacityKwh(dto.batteryCapacityKwh());
+        vehicle.setMaxAcPowerKw(dto.maxAcPowerKw());
+        vehicle.setMaxDcPowerKw(dto.maxDcPowerKw());
+        vehicle.setAcPhases(dto.acPhases());
     }
 
     private Vehicle getAccessibleVehicle(Long vehicleId, String currentUserEmail, boolean isAdmin) {
@@ -101,18 +109,6 @@ public class VehicleService {
         }
 
         return vehicle;
-    }
-
-    private ConnectorType mapConnectorType(String connector) {
-        if (connector == null) {
-            return ConnectorType.UNKNOWN;
-        }
-
-        try {
-            return ConnectorType.valueOf(connector);
-        } catch (IllegalArgumentException e) {
-            return ConnectorType.UNKNOWN;
-        }
     }
 
 }

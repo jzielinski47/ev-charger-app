@@ -1,45 +1,87 @@
 package jz.pk.evcm.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import jz.pk.evcm.dto.res.ChargerPointResponse;
+import jz.pk.evcm.entity.ChargerPoint;
+import jz.pk.evcm.entity.ConnectorType;
+import jz.pk.evcm.entity.Vehicle;
+import jz.pk.evcm.entity.VehicleInlet;
 import jz.pk.evcm.repository.ChargerPointRepository;
+import jz.pk.evcm.repository.VehicleRepository;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.PrecisionModel;
+import org.springframework.data.domain.Limit;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 @Service
+@Transactional(readOnly = true)
 public class LocalChargePointService {
+
+    private static final Limit MAX_RESULTS = Limit.of(100);
+    private static final double KM_PER_DEGREE_LAT = 111.32;
+    private static final double MAX_LATITUDE_FOR_COS = 89.0;
+
     private final ChargerPointRepository chargerPointRepository;
-    private final GeometryFactory geometryFactory = new GeometryFactory();
+    private final VehicleRepository vehicleRepository;
+    // set the same coordinate system as GPS (WGS84)
+    private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
-    public LocalChargePointService(ChargerPointRepository chargerPointRepository) {
+    public LocalChargePointService(ChargerPointRepository chargerPointRepository,
+                                   VehicleRepository vehicleRepository) {
         this.chargerPointRepository = chargerPointRepository;
+        this.vehicleRepository = vehicleRepository;
     }
 
-    public List<ChargerPointResponse> getAllChargersInProximity(
-            Double latitude,
-            Double longitude,
-            Double distanceInKm
-    ) {
-        return getAllChargersInProximity(latitude, longitude, distanceInKm, 100);
+    public ChargerPointResponse getChargerPointById(Long id) {
+        return chargerPointRepository.findById(id)
+                .map(ChargerPointResponse::fromChargerPoint)
+                .orElseThrow(() -> new EntityNotFoundException("Charger point not found"));
     }
 
-    public List<ChargerPointResponse> getAllChargersInProximity(
-            Double latitude,
-            Double longitude,
-            Double distanceInKm,
-            Integer maxResults
-    ) {
-
+    public List<ChargerPointResponse> getAllChargersInProximity(double latitude, double longitude, double distanceInKm,
+                                                                Long vehicleId, String ownerEmail) {
         Point userLocation = geometryFactory.createPoint(new Coordinate(longitude, latitude));
-        userLocation.setSRID(4326); // set the same coordinate system as GPS (WGS84)
-        return chargerPointRepository.findNearbyChargers(userLocation, distanceInKm)
-                .stream().map(ChargerPointResponse::fromChargerPoint)
-                .collect(Collectors.toList());
+        double distanceDeg = kmToDegrees(distanceInKm, latitude);
+        double distanceMeters = distanceInKm * 1000;
+
+        if (vehicleId == null) {
+            return toResponses(chargerPointRepository.findNearbyChargers(
+                    userLocation, distanceDeg, distanceMeters, MAX_RESULTS));
+        }
+
+        Set<ConnectorType> connectorTypes = compatibleConnectorsOfOwnedVehicle(vehicleId, ownerEmail);
+        if (connectorTypes.isEmpty()) {
+            return List.of();
+        }
+        return toResponses(chargerPointRepository.findNearbyChargersWithConnectorTypeIn(
+                userLocation, distanceDeg, distanceMeters, connectorTypes, MAX_RESULTS));
     }
 
+    private Set<ConnectorType> compatibleConnectorsOfOwnedVehicle(Long vehicleId, String ownerEmail) {
+        if (ownerEmail == null) {
+            throw new AuthenticationCredentialsNotFoundException("Vehicle filter requires authentication");
+        }
+        Vehicle vehicle = vehicleRepository.findByIdAndOwnerEmail(vehicleId, ownerEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Vehicle not found"));
+        return VehicleInlet.compatibleConnectors(vehicle.getSupportedInlets());
+    }
+
+    private static List<ChargerPointResponse> toResponses(List<ChargerPoint> chargers) {
+        return chargers.stream()
+                .map(ChargerPointResponse::fromChargerPoint)
+                .toList();
+    }
+
+    private static double kmToDegrees(double km, double latitude) {
+        double poleward = Math.min(Math.abs(latitude) + km / KM_PER_DEGREE_LAT, MAX_LATITUDE_FOR_COS);
+        return km / (KM_PER_DEGREE_LAT * Math.cos(Math.toRadians(poleward)));
+    }
 
 }

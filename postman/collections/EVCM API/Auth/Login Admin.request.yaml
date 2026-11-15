@@ -1,7 +1,9 @@
 $kind: http-request
-name: LoginAdmin
-url: "{{baseUrl}}/api/auth/login"
+name: Login Admin
 method: POST
+url: "{{baseUrl}}/api/auth/login"
+auth:
+  type: noauth
 headers:
   Content-Type: application/json
 body:
@@ -11,14 +13,10 @@ body:
       "email": "admin@localhost",
       "password": "admin"
     }
-auth:
-  type: noauth
 scripts:
   - type: afterResponse
     code: |-
-      const res = pm.response.json();
-      if (res.token) {
-        pm.collectionVariables.set("token", res.token);
-      }
+      pm.test("logged in", () => pm.response.to.have.status(200));
+      pm.collectionVariables.set("admin_token", pm.response.json().token);
     language: text/javascript
-order: 968597162690081
+order: 3000

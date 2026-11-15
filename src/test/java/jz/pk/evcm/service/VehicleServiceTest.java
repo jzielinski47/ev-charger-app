@@ -3,26 +3,35 @@ package jz.pk.evcm.service;
 import jakarta.persistence.EntityNotFoundException;
 import jz.pk.evcm.dto.req.local.VehicleRequest;
 import jz.pk.evcm.dto.res.VehicleResponse;
+import jz.pk.evcm.entity.User;
 import jz.pk.evcm.entity.Vehicle;
+import jz.pk.evcm.entity.VehicleInlet;
+import jz.pk.evcm.entity.VehicleOriginatingMarket;
 import jz.pk.evcm.exception.ForbiddenAccessException;
 import jz.pk.evcm.repository.VehicleRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Year;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @ExtendWith(MockitoExtension.class)
 public class VehicleServiceTest {
 
     @Mock
     private VehicleRepository vehicleRepository;
+
+    @Mock
+    private UserService userService;
 
     @InjectMocks
     private VehicleService vehicleService;
@@ -231,24 +240,215 @@ public class VehicleServiceTest {
      * tested method VehicleResponse addVehicle(VehicleRequest dto, String currentUserEmail, boolean isAdmin, String targetUserEmail)
      */
 
+    private static final VehicleRequest ADD_REQUEST = new VehicleRequest(
+            "Hyundai", "Ioniq 5", Year.of(2024), EnumSet.of(VehicleInlet.CCS2),
+            null, null, null, null, null);
+
+    private static User userWithEmail(String email) {
+        User user = new User();
+        user.setEmail(email);
+        return user;
+    }
+
+    private Vehicle captureSavedVehicle() {
+        ArgumentCaptor<Vehicle> captor = ArgumentCaptor.forClass(Vehicle.class);
+        Mockito.verify(vehicleRepository).save(captor.capture());
+        return captor.getValue();
+    }
+
+    private void saveReturnsArgument() {
+        Mockito.when(vehicleRepository.save(Mockito.any(Vehicle.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+    }
+
     @Test
     public void VehicleService_AddVehicle_AsUser_CreatesForCurrentUser() {
 
+        String userEmail = "user@test.invalid";
+        User currentUser = userWithEmail(userEmail);
+        Mockito.when(userService.getUserByEmail(userEmail)).thenReturn(currentUser);
+        saveReturnsArgument();
+
+        VehicleResponse result = vehicleService.addVehicle(ADD_REQUEST, userEmail, false, null);
+
+        Vehicle saved = captureSavedVehicle();
+        Assertions.assertThat(saved.getOwner()).isSameAs(currentUser);
+        Assertions.assertThat(saved.getBrand()).isEqualTo("Hyundai");
+        Assertions.assertThat(saved.getModel()).isEqualTo("Ioniq 5");
+        Assertions.assertThat(saved.getYearOfProduction()).isEqualTo(Year.of(2024));
+        Assertions.assertThat(saved.getSupportedInlets()).containsExactly(VehicleInlet.CCS2);
+        Assertions.assertThat(result.supportedInlets()).isEqualTo(Set.of(VehicleInlet.CCS2));
+    }
+
+    @Test
+    public void VehicleService_AddVehicle_WithSpecs_StoresAndReturnsSpecs() {
+
+        String userEmail = "user@test.invalid";
+        Mockito.when(userService.getUserByEmail(userEmail)).thenReturn(userWithEmail(userEmail));
+        saveReturnsArgument();
+        VehicleRequest request = new VehicleRequest(
+                "Hyundai", "Ioniq 5", Year.of(2024), EnumSet.of(VehicleInlet.CCS2),
+                VehicleOriginatingMarket.EUROPE, 77.4, 11.0, 235.0, 3);
+
+        VehicleResponse result = vehicleService.addVehicle(request, userEmail, false, null);
+
+        Vehicle saved = captureSavedVehicle();
+        Assertions.assertThat(saved.getVehicleOriginatingMarket()).isEqualTo(VehicleOriginatingMarket.EUROPE);
+        Assertions.assertThat(saved.getBatteryCapacityKwh()).isEqualTo(77.4);
+        Assertions.assertThat(saved.getMaxAcPowerKw()).isEqualTo(11.0);
+        Assertions.assertThat(saved.getMaxDcPowerKw()).isEqualTo(235.0);
+        Assertions.assertThat(saved.getAcPhases()).isEqualTo(3);
+        Assertions.assertThat(result.vehicleOriginatingMarket()).isEqualTo(VehicleOriginatingMarket.EUROPE);
+        Assertions.assertThat(result.batteryCapacityKwh()).isEqualTo(77.4);
+        Assertions.assertThat(result.maxAcPowerKw()).isEqualTo(11.0);
+        Assertions.assertThat(result.maxDcPowerKw()).isEqualTo(235.0);
+        Assertions.assertThat(result.acPhases()).isEqualTo(3);
     }
 
     @Test
     public void VehicleService_AddVehicle_AsAdmin_OnBehalfOfUser_CreatesForTargetUser() {
 
+        String adminEmail = "admin@test.invalid";
+        String targetEmail = "target@test.invalid";
+        User targetUser = userWithEmail(targetEmail);
+        Mockito.when(userService.getUserByEmail(targetEmail)).thenReturn(targetUser);
+        saveReturnsArgument();
+
+        vehicleService.addVehicle(ADD_REQUEST, adminEmail, true, targetEmail);
+
+        Assertions.assertThat(captureSavedVehicle().getOwner()).isSameAs(targetUser);
+        Mockito.verify(userService, Mockito.never()).getUserByEmail(adminEmail);
     }
 
     @Test
     public void VehicleService_AddVehicle_AsUser_OnBehalfOfUser_CreatesForCurrentUser() {
 
+        String userEmail = "user@test.invalid";
+        String targetEmail = "target@test.invalid";
+        User currentUser = userWithEmail(userEmail);
+        Mockito.when(userService.getUserByEmail(userEmail)).thenReturn(currentUser);
+        saveReturnsArgument();
+
+        vehicleService.addVehicle(ADD_REQUEST, userEmail, false, targetEmail);
+
+        Assertions.assertThat(captureSavedVehicle().getOwner()).isSameAs(currentUser);
+        Mockito.verify(userService, Mockito.never()).getUserByEmail(targetEmail);
     }
 
     @Test
     public void VehicleService_AddVehicle_WithInvalidUser_ReturnsException() {
 
+        String userEmail = "missing@test.invalid";
+        Mockito.when(userService.getUserByEmail(userEmail)).thenThrow(new EntityNotFoundException());
+
+        Assertions.assertThatThrownBy(() -> {
+            vehicleService.addVehicle(ADD_REQUEST, userEmail, false, null);
+        }).isInstanceOf(EntityNotFoundException.class);
+
+        Mockito.verify(vehicleRepository, Mockito.never()).save(Mockito.any());
+    }
+
+    /*
+     * tested methods modifyVehicle(...) and deleteVehicle(...)
+     */
+
+    private static final VehicleRequest MODIFY_REQUEST = new VehicleRequest(
+            "Kia", "EV6", Year.of(2023), EnumSet.of(VehicleInlet.CHADEMO, VehicleInlet.TYPE_2),
+            VehicleOriginatingMarket.JAPAN, 58.0, 7.4, 50.0, 1);
+
+    private Vehicle vehicleOwnedBy(Long id, String ownerEmail) {
+        Vehicle vehicle = new Vehicle();
+        vehicle.setId(id);
+        vehicle.setBrand("Hyundai");
+        vehicle.setSupportedInlets(EnumSet.of(VehicleInlet.CCS2));
+        vehicle.setOwner(userWithEmail(ownerEmail));
+        Mockito.when(vehicleRepository.findById(id)).thenReturn(Optional.of(vehicle));
+        return vehicle;
+    }
+
+    @Test
+    public void VehicleService_ModifyVehicle_AsOwner_AppliesRequest() {
+
+        Vehicle vehicle = vehicleOwnedBy(1L, "owner@test.invalid");
+        saveReturnsArgument();
+
+        VehicleResponse result = vehicleService.modifyVehicle(1L, MODIFY_REQUEST, "owner@test.invalid", false);
+
+        Vehicle saved = captureSavedVehicle();
+        Assertions.assertThat(saved).isSameAs(vehicle);
+        Assertions.assertThat(saved.getBrand()).isEqualTo("Kia");
+        Assertions.assertThat(saved.getSupportedInlets())
+                .containsExactlyInAnyOrder(VehicleInlet.CHADEMO, VehicleInlet.TYPE_2);
+        Assertions.assertThat(saved.getVehicleOriginatingMarket()).isEqualTo(VehicleOriginatingMarket.JAPAN);
+        Assertions.assertThat(saved.getAcPhases()).isEqualTo(1);
+        Assertions.assertThat(result.brand()).isEqualTo("Kia");
+    }
+
+    @Test
+    public void VehicleService_ModifyVehicle_AsAdmin_OnOthersVehicle_AppliesRequest() {
+
+        vehicleOwnedBy(1L, "owner@test.invalid");
+        saveReturnsArgument();
+
+        vehicleService.modifyVehicle(1L, MODIFY_REQUEST, "admin@test.invalid", true);
+
+        Assertions.assertThat(captureSavedVehicle().getBrand()).isEqualTo("Kia");
+    }
+
+    @Test
+    public void VehicleService_ModifyVehicle_AsUser_OnOthersVehicle_ReturnsException() {
+
+        vehicleOwnedBy(1L, "owner@test.invalid");
+
+        Assertions.assertThatThrownBy(() -> {
+            vehicleService.modifyVehicle(1L, MODIFY_REQUEST, "other@test.invalid", false);
+        }).isInstanceOf(EntityNotFoundException.class);
+
+        Mockito.verify(vehicleRepository, Mockito.never()).save(Mockito.any());
+    }
+
+    @Test
+    public void VehicleService_ModifyVehicle_WithInvalidId_ReturnsException() {
+
+        Mockito.when(vehicleRepository.findById(99L)).thenReturn(Optional.empty());
+
+        Assertions.assertThatThrownBy(() -> {
+            vehicleService.modifyVehicle(99L, MODIFY_REQUEST, "owner@test.invalid", false);
+        }).isInstanceOf(EntityNotFoundException.class);
+
+        Mockito.verify(vehicleRepository, Mockito.never()).save(Mockito.any());
+    }
+
+    @Test
+    public void VehicleService_DeleteVehicle_AsOwner_DeletesVehicle() {
+
+        Vehicle vehicle = vehicleOwnedBy(1L, "owner@test.invalid");
+
+        vehicleService.deleteVehicle(1L, "owner@test.invalid", false);
+
+        Mockito.verify(vehicleRepository).delete(vehicle);
+    }
+
+    @Test
+    public void VehicleService_DeleteVehicle_AsAdmin_OnOthersVehicle_DeletesVehicle() {
+
+        Vehicle vehicle = vehicleOwnedBy(1L, "owner@test.invalid");
+
+        vehicleService.deleteVehicle(1L, "admin@test.invalid", true);
+
+        Mockito.verify(vehicleRepository).delete(vehicle);
+    }
+
+    @Test
+    public void VehicleService_DeleteVehicle_AsUser_OnOthersVehicle_ReturnsException() {
+
+        vehicleOwnedBy(1L, "owner@test.invalid");
+
+        Assertions.assertThatThrownBy(() -> {
+            vehicleService.deleteVehicle(1L, "other@test.invalid", false);
+        }).isInstanceOf(EntityNotFoundException.class);
+
+        Mockito.verify(vehicleRepository, Mockito.never()).delete(Mockito.any());
     }
 
 }

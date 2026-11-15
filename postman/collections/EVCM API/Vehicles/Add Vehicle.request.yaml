@@ -6,7 +6,7 @@ headers:
   Content-Type: application/json
 queryParams:
   - key: targetEmail
-    value: ""
+    value: john.doe@example.com
     disabled: true
     description: "Admin only: add vehicle for a specific user by email"
 body:
@@ -16,11 +16,17 @@ body:
       "brand": "Tesla",
       "model": "Model 3",
       "yearOfProduction": 2022,
-      "connector": "CCS",
-      "isConnectorModified": false
+      "supportedInlets": ["CCS2", "TYPE_2"],
+      "vehicleOriginatingMarket": "EUROPE",
+      "batteryCapacityKwh": 60.0,
+      "maxAcPowerKw": 11.0,
+      "maxDcPowerKw": 170.0,
+      "acPhases": 3
     }
-auth:
-  type: bearer
-  credentials:
-    token: "{{admin_token}}"
-order: 3000
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("created", () => pm.response.to.be.success);
+      pm.collectionVariables.set("vehicleId", pm.response.json().id);
+    language: text/javascript
+order: 1000
