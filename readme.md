@@ -11,7 +11,7 @@ This repository contains the backend service of the application. Currently, it p
 - **Proximity Search:** Built spatial queries (via PostGIS and Hibernate-Spatial) leveraging database spatial indexing to help users instantly find nearby EV charging stations.
 - **Personalized Garage Management:** Developed CRUD operations allowing users to easily add, manage, and set an active vehicle.
 - **Hybrid API Architecture:** Utilized GraphQL for flexible, high-performance charger data retrieval, alongside REST APIs for authentication and vehicle management.
-- **Rate Limiting:** In-memory per-client limits (Bucket4j + Caffeine) protect the server from request floods: anonymous clients get 1 request per minute (keyed by IP), authenticated users 20 per minute (keyed by account), admins, `/api/auth/**` and the API docs are exempt. Exceeding the limit returns `429` with a `Retry-After` header. Limits are configurable via the `rate-limit.*` properties in `application.properties`.
+- **Rate Limiting:** In-memory per-client limits (Bucket4j + Caffeine) protect the server from request floods: anonymous clients get 5 requests per minute (keyed by IP), authenticated users 20 per minute (keyed by account), admins, `/api/auth/**` and the API docs are exempt. Exceeding the limit returns `429` with a `Retry-After` header. Limits are configurable via the `rate-limit.*` properties in `application.properties`.
 - **Scheduled Replication (ChargerSync):** Automated a three-hour background sync of OpenChargeAPI data for major Polish cities. Routing client queries directly to this local database eliminates third-party network latency and completely bypasses external rate limits.
 
 ## Technology Stack
@@ -96,7 +96,7 @@ All endpoints except `/api/auth/**` and the API docs are rate limited per client
 
 | Client | Key | Default limit |
 |---|---|---|
-| Anonymous | IP address | 1 request / minute |
+| Anonymous | IP address | 5 requests / minute |
 | Authenticated | account | 20 requests / minute |
 
 Every limited response carries an `X-Rate-Limit-Remaining` header. Exceeding the limit returns:
@@ -252,7 +252,28 @@ Endpoint: `POST /graphql/chargers`. Public, but the `vehicleId` filter requires 
 ```graphql
 type Query {
     chargerPointById(id: ID!): ChargerPoint
-    allChargerPointsInProximity(lat: Float!, lon: Float!, proximity: Float!, vehicleId: ID): [ChargerPoint!]!
+    allChargerPointsInProximity(lat: Float!, lon: Float!, proximity: Float!, vehicleId: ID,
+                                filter: ChargerFilter, sort: ChargerSort = DISTANCE,
+                                limit: Int = 100, offset: Int = 0): [ChargerPoint!]!
+    allChargerPointsInBounds(north: Float!, south: Float!, east: Float!, west: Float!, vehicleId: ID,
+                             filter: ChargerFilter, sort: ChargerSort = DISTANCE,
+                             limit: Int = 100, offset: Int = 0): [ChargerPoint!]!
+}
+
+input ChargerFilter {
+    currentType: CurrentKind
+    operationalOnly: Boolean
+}
+
+enum CurrentKind {
+    AC
+    DC
+}
+
+enum ChargerSort {
+    DISTANCE
+    POWER
+    POINTS
 }
 
 type ChargerPoint {
@@ -266,6 +287,7 @@ type ChargerPoint {
     numberOfPoints: Int
     dateLastVerified: String
     dateLastConfirmed: String
+    distanceKm: Float
 }
 
 type DataProvider {
@@ -307,10 +329,19 @@ type Connection {
 
 **`chargerPointById(id)`** — a single charger. Returns a `NOT_FOUND` error when the id does not exist.
 
-**`allChargerPointsInProximity(lat, lon, proximity, vehicleId)`** — chargers within `proximity` **kilometres** of the given WGS84 coordinates, nearest first, up to 100 results.
+**`allChargerPointsInProximity(lat, lon, proximity, ...)`** — chargers within `proximity` **kilometres** of the given WGS84 coordinates. `distanceKm` is measured from `lat`/`lon`.
 
-- When `vehicleId` is passed, only chargers with at least one connector compatible with that vehicle's inlets are returned (see the inlet table above).
-- `vehicleId` requires authentication (`UNAUTHORIZED` otherwise) and must belong to the caller (`NOT_FOUND` otherwise).
+**`allChargerPointsInBounds(north, south, east, west, ...)`** — chargers inside a map viewport. `distanceKm` and the `DISTANCE` sort use the centre of the box. Boxes crossing the antimeridian (`west > east`) are rejected; split them into two queries.
+
+Both searches share these arguments:
+
+- `vehicleId` — only chargers with at least one connector compatible with that vehicle's inlets (see the inlet table above). Requires authentication (`UNAUTHORIZED` otherwise) and must belong to the caller (`NOT_FOUND` otherwise).
+- `filter.currentType` — `AC` (single- or three-phase) or `DC`; keeps chargers with at least one connection of that current. Combined with `vehicleId`, the same connection must match both.
+- `filter.operationalOnly` — `true` keeps only chargers whose `isOperational` is `true` (unknown status is excluded).
+- `sort` — `DISTANCE` (nearest first, default), `POWER` (strongest connection first; with `vehicleId` or `currentType` only matching connections count) or `POINTS` (most `numberOfPoints` first). Unknown values go last; ties are broken by distance.
+- `limit` (1–500, default 100) and `offset` (default 0) page through the sorted results.
+
+Invalid arguments (coordinates out of range, `proximity <= 0`, `south > north`, `west > east`, `limit` or `offset` out of range) return a `BAD_REQUEST` error. `distanceKm` is `null` in `chargerPointById`.
 
 #### Field values
 
@@ -322,8 +353,11 @@ type Connection {
 
 ```graphql
 query {
-  allChargerPointsInProximity(lat: 50.0647, lon: 19.9450, proximity: 5, vehicleId: 7) {
+  allChargerPointsInProximity(lat: 50.0647, lon: 19.9450, proximity: 5, vehicleId: 7,
+                              filter: { currentType: DC, operationalOnly: true },
+                              sort: POWER, limit: 50, offset: 0) {
     id
+    distanceKm
     isOperational
     addressInfo { title addressLine1 town latitude longitude }
     operator { name websiteUrl }
