@@ -1,7 +1,6 @@
 package jz.pk.evcm.controller;
 
 import jz.pk.evcm.entity.User;
-import jz.pk.evcm.entity.UserAvatar;
 import jz.pk.evcm.repository.UserRepository;
 import jz.pk.evcm.security.JwtService;
 import jz.pk.evcm.testdata.TestContainersConfig;
@@ -73,40 +72,103 @@ class UserControllerTest {
                 .jsonPath("$.email").isEqualTo("me@test.dev")
                 .jsonPath("$.name").isEqualTo("Jan")
                 .jsonPath("$.surname").isEqualTo("Kowalski")
-                .jsonPath("$.avatar").doesNotExist();
+                .jsonPath("$.avatarSeed").doesNotExist();
     }
 
     @Test
     void getCurrentUser_withoutToken_isRejected() {
-        webTestClient.get().uri("/api/users/me").exchange().expectStatus().is4xxClientError();
+        webTestClient.get().uri("/api/users/me").exchange().expectStatus().isUnauthorized();
     }
 
     @Test
-    void updateAvatar_withPreset_savesIt() {
+    void updateAvatar_withSeed_savesIt() {
         User user = saveUser("me@test.dev");
 
         putAvatar(user, """
-                {"avatar": "COMET"}
+                {"seed": "Felix-42_x"}
                 """)
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.avatar").isEqualTo("COMET");
+                .jsonPath("$.avatarSeed").isEqualTo("Felix-42_x");
 
         assertThat(userRepository.findByEmail("me@test.dev")).get()
-                .extracting(User::getAvatar).isEqualTo(UserAvatar.COMET);
+                .extracting(User::getAvatarSeed).isEqualTo("Felix-42_x");
     }
 
     @Test
-    void updateAvatar_outsideThePresets_returnsBadRequest() {
+    void updateAvatar_withNullSeed_resetsToInitials() {
+        User user = saveUser("me@test.dev");
+        putAvatar(user, """
+                {"seed": "Felix"}
+                """).expectStatus().isOk();
+
+        putAvatar(user, "{}")
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.avatarSeed").doesNotExist();
+
+        assertThat(userRepository.findByEmail("me@test.dev")).get()
+                .extracting(User::getAvatarSeed).isNull();
+    }
+
+    @Test
+    void updateAvatar_withInvalidSeed_returnsBadRequest() {
         User user = saveUser("me@test.dev");
 
         putAvatar(user, """
-                {"avatar": "https://evil.example/me.png"}
+                {"seed": "https://evil.example/me.png"}
                 """)
-                .expectStatus().isBadRequest();
-        putAvatar(user, "{}").expectStatus().isBadRequest();
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.errors[0].field").isEqualTo("seed");
+        putAvatar(user, """
+                {"seed": ""}
+                """).expectStatus().isBadRequest();
+        putAvatar(user, """
+                {"seed": "%s"}
+                """.formatted("a".repeat(65))).expectStatus().isBadRequest();
 
         assertThat(userRepository.findByEmail("me@test.dev")).get()
-                .extracting(User::getAvatar).isNull();
+                .extracting(User::getAvatarSeed).isNull();
+    }
+
+    private WebTestClient.ResponseSpec putProfile(User user, String body) {
+        return webTestClient.put().uri("/api/users/me")
+                .header(HttpHeaders.AUTHORIZATION, bearer(user))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(body)
+                .exchange();
+    }
+
+    @Test
+    void updateProfile_changesNameAndSurname() {
+        User user = saveUser("me@test.dev");
+
+        putProfile(user, """
+                {"name": "  Anna ", "surname": "Nowak"}
+                """)
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.name").isEqualTo("Anna")
+                .jsonPath("$.surname").isEqualTo("Nowak")
+                .jsonPath("$.email").isEqualTo("me@test.dev");
+
+        assertThat(userRepository.findByEmail("me@test.dev")).get()
+                .extracting(User::getName, User::getSurname).containsExactly("Anna", "Nowak");
+    }
+
+    @Test
+    void updateProfile_withBlankFields_returnsFieldErrors() {
+        User user = saveUser("me@test.dev");
+
+        putProfile(user, """
+                {"name": " ", "surname": null}
+                """)
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.errors.length()").isEqualTo(2);
+
+        assertThat(userRepository.findByEmail("me@test.dev")).get()
+                .extracting(User::getName).isEqualTo("Jan");
     }
 }

@@ -139,7 +139,7 @@ class VehicleControllerTest {
     void getVehicles_withoutToken_isRejected() {
         webTestClient.get().uri("/api/vehicles")
                 .exchange()
-                .expectStatus().isForbidden();
+                .expectStatus().isUnauthorized();
     }
 
     @Test

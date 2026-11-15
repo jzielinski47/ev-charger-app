@@ -11,7 +11,7 @@ This repository contains the backend service of the application. Currently, it p
 - **Proximity Search:** Built spatial queries (via PostGIS and Hibernate-Spatial) leveraging database spatial indexing to help users instantly find nearby EV charging stations.
 - **Personalized Garage Management:** Developed CRUD operations allowing users to easily add, manage, and set an active vehicle.
 - **Hybrid API Architecture:** Utilized GraphQL for flexible, high-performance charger data retrieval, alongside REST APIs for authentication and vehicle management.
-- **Rate Limiting:** In-memory per-client limits (Bucket4j + Caffeine) protect the server from request floods: anonymous clients get 1 request per minute (keyed by IP), authenticated users 20 per minute (keyed by account), admins, `/api/auth/**`, `/api/catalog/**`, `/actuator/health` and the API docs are exempt. Exceeding the limit returns `429` with a `Retry-After` header. Limits are configurable via the `rate-limit.*` properties in `application.properties`.
+- **Rate Limiting:** In-memory per-client limits (Bucket4j + Caffeine) protect the server from request floods: anonymous clients get 5 requests per minute (keyed by IP), authenticated users 20 per minute (keyed by account), admins, `/api/auth/**` and the API docs are exempt. Exceeding the limit returns `429` with a `Retry-After` header. Limits are configurable via the `rate-limit.*` properties in `application.properties`.
 - **Scheduled Replication (ChargerSync):** Automated a three-hour background sync of OpenChargeAPI data for major Polish cities. Routing client queries directly to this local database eliminates third-party network latency and completely bypasses external rate limits.
 
 ## Technology Stack
@@ -85,10 +85,18 @@ Protected endpoints require a JWT obtained from `POST /api/auth/login`, sent as:
 Authorization: Bearer <token>
 ```
 
+Login also returns a `refreshToken` (valid 30 days, configurable via `security.jwt.refresh-expiration`). When the access token expires, exchange the refresh token at `POST /api/auth/refresh` for a new pair; every refresh token can be used only once. `POST /api/auth/logout` revokes it. Access tokens are stateless and stay valid until they expire.
+
+A missing, invalid or expired token on a protected endpoint returns `401`; a valid token without the required role returns `403`:
+
+```json
+{ "error": "Unauthorized", "message": "Authentication required" }
+```
+
 | Access level | Endpoints |
 |---|---|
-| Public | `/api/auth/**`, `/api/catalog/**`, `/graphql/chargers`, `/actuator/health`, Swagger / OpenAPI docs |
-| Authenticated (`USER` or `ADMIN`) | `/api/vehicles/**` |
+| Public | `/api/auth/**`, `/graphql/chargers`, Swagger / OpenAPI docs |
+| Authenticated (`USER` or `ADMIN`) | `/api/users/me/**`, `/api/vehicles/**` |
 | Admin only (`ADMIN`) | `/api/admin/**` |
 
 ### Rate Limiting
@@ -97,7 +105,7 @@ All endpoints except `/api/auth/**`, `/api/catalog/**`, `/actuator/health` and t
 
 | Client | Key | Default limit |
 |---|---|---|
-| Anonymous | IP address | 1 request / minute |
+| Anonymous | IP address | 5 requests / minute |
 | Authenticated | account | 20 requests / minute |
 
 Every limited response carries an `X-Rate-Limit-Remaining` header. Exceeding the limit returns:
@@ -109,6 +117,23 @@ Retry-After: 42
 { "error": "Too Many Requests", "message": "Rate limit exceeded, retry in 42 seconds" }
 ```
 
+### Validation Errors
+
+A `400` caused by an invalid request body lists every failing field:
+
+```json
+{
+  "error": "Bad Request",
+  "message": "Validation failed",
+  "errors": [
+    { "field": "email", "message": "Please provide a valid email address" },
+    { "field": "password", "message": "Password must be at least 8 characters long" }
+  ]
+}
+```
+
+A value of the wrong type (for example an unknown enum value) is reported as `{ "field": "<path>", "message": "Invalid value" }`. A body that is not valid JSON returns `{ "error": "Bad Request", "message": "Malformed request body" }` without `errors`.
+
 ### REST Endpoints
 
 #### Auth — `/api/auth`
@@ -116,7 +141,9 @@ Retry-After: 42
 | Method | Path | Auth | Description |
 |---|---|---|---|
 | `POST` | `/api/auth/signup` | Public | Register a new user account |
-| `POST` | `/api/auth/login` | Public | Log in and receive a JWT |
+| `POST` | `/api/auth/login` | Public | Log in and receive an access and refresh token |
+| `POST` | `/api/auth/refresh` | Public | Exchange a refresh token for a new pair |
+| `POST` | `/api/auth/logout` | Public | Revoke a refresh token |
 
 **`POST /api/auth/signup`**
 
@@ -149,13 +176,56 @@ Errors: `400` validation failed, `409` email already registered.
 { "email": "jan@example.com", "password": "secret123" }
 ```
 
-Response `200 OK` (`expiresIn` in milliseconds):
+Response `200 OK` (`expiresIn` and `refreshExpiresIn` in milliseconds):
 
 ```json
-{ "token": "eyJhbGciOiJIUzI1NiJ9...", "expiresIn": 3600000 }
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9...",
+  "expiresIn": 3600000,
+  "refreshToken": "q3Jx0b0...",
+  "refreshExpiresIn": 2592000000
+}
 ```
 
 Errors: `400` validation failed, `401` bad credentials.
+
+**`POST /api/auth/refresh`**
+
+```json
+{ "refreshToken": "q3Jx0b0..." }
+```
+
+Response `200 OK` with the same body as login. The submitted refresh token is revoked. Errors: `400` validation failed, `401` refresh token unknown, already used, revoked or expired.
+
+**`POST /api/auth/logout`**
+
+Same body as refresh. Response `204 No Content`, also when the token was already revoked. Errors: `400` validation failed.
+
+#### Current user — `/api/users/me`
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/users/me` | Profile of the logged-in user |
+| `PUT` | `/api/users/me` | Change name and surname |
+| `PUT` | `/api/users/me/password` | Change password |
+| `PUT` | `/api/users/me/avatar` | Set or clear the DiceBear avatar seed |
+| `DELETE` | `/api/users/me` | Delete the account |
+
+`GET`, `PUT /api/users/me` and `PUT /api/users/me/avatar` return the profile:
+
+```json
+{ "id": 1, "name": "Jan", "surname": "Kowalski", "email": "jan@example.com", "roles": ["USER"], "avatarSeed": "Felix-42" }
+```
+
+**`PUT /api/users/me`**: `{ "name": "Jan", "surname": "Kowalski" }`, both required, max 255 chars. The e-mail cannot be changed.
+
+**`PUT /api/users/me/password`**: `{ "currentPassword": "secret123", "newPassword": "newSecret456" }`, `newPassword` 8–255 chars. Revokes every refresh token of the user (other devices are logged out at their next refresh) and returns a new token pair with the same body as login. A wrong `currentPassword` returns `400` with a field error on `currentPassword`.
+
+**`PUT /api/users/me/avatar`**: `{ "seed": "Felix-42" }`. The frontend renders the avatar with DiceBear from this seed; the backend only stores it. The seed is 1–64 characters of letters, digits, `-` or `_`; `null` (or `{}`) clears it and the frontend falls back to initials. Do not derive the seed from personal data such as the e-mail, since it is sent to the DiceBear API.
+
+**`DELETE /api/users/me`**: `{ "password": "secret123" }`. Returns `204 No Content` and permanently deletes the user, their vehicles and refresh tokens. A wrong password returns `400` with a field error on `password`; deleting the last admin returns `409`.
+
+Errors on all endpoints: `400` validation failed, `401` missing, invalid or expired token.
 
 #### Vehicles — `/api/vehicles`
 
@@ -221,7 +291,7 @@ Optional query parameter `targetEmail` on `GET /api/vehicles` and `POST /api/veh
 
 `DELETE` returns `200 OK` with an empty body.
 
-Errors: `400` validation failed, `403` missing/expired token or `targetEmail` used by a non-admin, `404` vehicle does not exist or belongs to another user.
+Errors: `400` validation failed, `401` missing, invalid or expired token, `403` `targetEmail` used by a non-admin, `404` vehicle does not exist or belongs to another user.
 
 **Vehicle inlets** and the charger connectors they are compatible with (used by the GraphQL `vehicleId` filter):
 
@@ -243,48 +313,7 @@ Admin-only tools for working directly with [Open Charge Map](https://openchargem
 | `GET` | `/api/admin/chargers?latitude={lat}&longitude={lon}&distance={km}&maxResults={n}` | Preview raw OCM chargers around a point; nothing is saved. `maxResults` defaults to 100 |
 | `POST` | `/api/admin/chargers/save?latitude={lat}&longitude={lon}&distance={km}&maxResults={n}` | Fetch OCM chargers around a point and save them to the local database. `maxResults` defaults to 1000 |
 
-`latitude` (-90–90), `longitude` (-180–180) and `distance` (> 0, km) are required; `maxResults` accepts 1–5000. The preview returns the raw OCM charger list. The import returns a summary:
-
-```json
-{ "imported": 312, "created": 40, "updated": 272, "pois": [ ... ] }
-```
-
-`imported` is the number of chargers OCM returned and saved, split into `created` (new in the local database) and `updated` (already present); `pois` is the raw OCM list. When `imported` equals `maxResults`, OCM probably has more chargers in the area: raise `maxResults` or use a smaller `distance`.
-
-Errors: `400` invalid or missing parameters, `403` when not logged in as an admin.
-
-#### Catalogue — `/api/catalog`
-
-Public, read-only car presets for the vehicle form. Not rate limited.
-
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/api/catalog/brands` | All brands, sorted by name |
-| `GET` | `/api/catalog/brands/{slug}/models` | Models of one brand with charging presets |
-
-```json
-[{ "slug": "tesla", "name": "Tesla" }, { "slug": "mercedes-benz", "name": "Mercedes-Benz" }]
-```
-
-```json
-[
-  {
-    "id": 1,
-    "name": "Model 3 Long Range",
-    "supportedInlets": ["CCS2"],
-    "batteryCapacityKwh": 75.0,
-    "maxAcPowerKw": 11.0,
-    "maxDcPowerKw": 250.0,
-    "acPhases": 3
-  }
-]
-```
-
-The model fields match `POST /api/vehicles`, so a preset can prefill the vehicle form. Brand slugs match the frontend's logo files. Values are typical figures from public spec sheets for the European version (North American for `CCS1` models) and vary by year and trim. Many brands have no presets yet and return `[]`. An unknown slug returns `404`. The data is seeded by the `V8__car_catalogue.sql` migration.
-
-#### Health — `/actuator/health`
-
-Public, not rate limited, CORS-enabled. Returns `200 {"status":"UP"}` when the application and database are healthy and `503 {"status":"DOWN"}` otherwise. No other actuator endpoints are exposed.
+Both return the raw OCM charger list. Errors: `401` when not logged in, `403` when not an admin, `500` when OCM returns no data.
 
 ### GraphQL API
 
@@ -295,7 +324,28 @@ Endpoint: `POST /graphql/chargers`. Public, but the `vehicleId` filter requires 
 ```graphql
 type Query {
     chargerPointById(id: ID!): ChargerPoint
-    allChargerPointsInProximity(lat: Float!, lon: Float!, proximity: Float!, vehicleId: ID): [ChargerPoint!]!
+    allChargerPointsInProximity(lat: Float!, lon: Float!, proximity: Float!, vehicleId: ID,
+                                filter: ChargerFilter, sort: ChargerSort = DISTANCE,
+                                limit: Int = 100, offset: Int = 0): [ChargerPoint!]!
+    allChargerPointsInBounds(north: Float!, south: Float!, east: Float!, west: Float!, vehicleId: ID,
+                             filter: ChargerFilter, sort: ChargerSort = DISTANCE,
+                             limit: Int = 100, offset: Int = 0): [ChargerPoint!]!
+}
+
+input ChargerFilter {
+    currentType: CurrentKind
+    operationalOnly: Boolean
+}
+
+enum CurrentKind {
+    AC
+    DC
+}
+
+enum ChargerSort {
+    DISTANCE
+    POWER
+    POINTS
 }
 
 type ChargerPoint {
@@ -309,6 +359,7 @@ type ChargerPoint {
     numberOfPoints: Int
     dateLastVerified: String
     dateLastConfirmed: String
+    distanceKm: Float
 }
 
 type DataProvider {
@@ -350,10 +401,19 @@ type Connection {
 
 **`chargerPointById(id)`** — a single charger. Returns a `NOT_FOUND` error when the id does not exist.
 
-**`allChargerPointsInProximity(lat, lon, proximity, vehicleId)`** — chargers within `proximity` **kilometres** of the given WGS84 coordinates, nearest first, up to 100 results.
+**`allChargerPointsInProximity(lat, lon, proximity, ...)`** — chargers within `proximity` **kilometres** of the given WGS84 coordinates. `distanceKm` is measured from `lat`/`lon`.
 
-- When `vehicleId` is passed, only chargers with at least one connector compatible with that vehicle's inlets are returned (see the inlet table above).
-- `vehicleId` requires authentication (`UNAUTHORIZED` otherwise) and must belong to the caller (`NOT_FOUND` otherwise).
+**`allChargerPointsInBounds(north, south, east, west, ...)`** — chargers inside a map viewport. `distanceKm` and the `DISTANCE` sort use the centre of the box. Boxes crossing the antimeridian (`west > east`) are rejected; split them into two queries.
+
+Both searches share these arguments:
+
+- `vehicleId` — only chargers with at least one connector compatible with that vehicle's inlets (see the inlet table above). Requires authentication (`UNAUTHORIZED` otherwise) and must belong to the caller (`NOT_FOUND` otherwise).
+- `filter.currentType` — `AC` (single- or three-phase) or `DC`; keeps chargers with at least one connection of that current. Combined with `vehicleId`, the same connection must match both.
+- `filter.operationalOnly` — `true` keeps only chargers whose `isOperational` is `true` (unknown status is excluded).
+- `sort` — `DISTANCE` (nearest first, default), `POWER` (strongest connection first; with `vehicleId` or `currentType` only matching connections count) or `POINTS` (most `numberOfPoints` first). Unknown values go last; ties are broken by distance.
+- `limit` (1–500, default 100) and `offset` (default 0) page through the sorted results.
+
+Invalid arguments (coordinates out of range, `proximity <= 0`, `south > north`, `west > east`, `limit` or `offset` out of range) return a `BAD_REQUEST` error. `distanceKm` is `null` in `chargerPointById`.
 
 #### Field values
 
@@ -365,8 +425,11 @@ type Connection {
 
 ```graphql
 query {
-  allChargerPointsInProximity(lat: 50.0647, lon: 19.9450, proximity: 5, vehicleId: 7) {
+  allChargerPointsInProximity(lat: 50.0647, lon: 19.9450, proximity: 5, vehicleId: 7,
+                              filter: { currentType: DC, operationalOnly: true },
+                              sort: POWER, limit: 50, offset: 0) {
     id
+    distanceKm
     isOperational
     addressInfo { title addressLine1 town latitude longitude }
     operator { name websiteUrl }

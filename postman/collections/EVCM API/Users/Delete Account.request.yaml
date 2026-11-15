@@ -1,0 +1,42 @@
+$kind: http-request
+name: Delete Account
+description: Signs up and logs in a throwaway user, then deletes that account.
+method: DELETE
+url: "{{baseUrl}}/api/users/me"
+auth:
+  type: bearer
+  credentials:
+    token: "{{delete_token}}"
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "password": "zaq1@WSX"
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      const email = "delete.me." + Date.now() + "@example.com";
+      const json = (body) => ({ mode: "raw", raw: JSON.stringify(body) });
+
+      pm.sendRequest({
+          url: pm.variables.replaceIn("{{baseUrl}}/api/auth/signup"),
+          method: "POST",
+          header: { "Content-Type": "application/json" },
+          body: json({ name: "Delete", surname: "Me", email, password: "zaq1@WSX" })
+      }, () => {
+          pm.sendRequest({
+              url: pm.variables.replaceIn("{{baseUrl}}/api/auth/login"),
+              method: "POST",
+              header: { "Content-Type": "application/json" },
+              body: json({ email, password: "zaq1@WSX" })
+          }, (err, res) => pm.collectionVariables.set("delete_token", res.json().token));
+      });
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("account deleted", () => pm.response.to.have.status(204));
+    language: text/javascript
+order: 5000

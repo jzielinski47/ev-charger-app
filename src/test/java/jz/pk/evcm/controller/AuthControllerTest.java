@@ -2,12 +2,14 @@ package jz.pk.evcm.controller;
 
 import jz.pk.evcm.controller.app.AuthController;
 import jz.pk.evcm.dto.req.local.LoginUserDto;
+import jz.pk.evcm.dto.req.local.RefreshTokenRequest;
 import jz.pk.evcm.dto.req.local.SignupUserDto;
 import jz.pk.evcm.dto.res.LoginResponse;
 import jz.pk.evcm.dto.res.UserResponse;
 import jz.pk.evcm.entity.User;
-import jz.pk.evcm.security.JwtService;
+import jz.pk.evcm.exception.InvalidRefreshTokenException;
 import jz.pk.evcm.service.AuthService;
+import jz.pk.evcm.service.SessionService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,7 +29,7 @@ import static org.mockito.Mockito.*;
 class AuthControllerTest {
 
     @Mock
-    private JwtService jwtService;
+    private SessionService sessionService;
     @Mock
     private AuthService authService;
     @InjectMocks
@@ -51,7 +53,7 @@ class AuthControllerTest {
             assertThat(response.getBody()).isSameAs(expected);
             verify(authService).signupUser(same(signupDto));
             verifyNoMoreInteractions(authService);
-            verifyNoInteractions(jwtService);
+            verifyNoInteractions(sessionService);
         }
 
         @Test
@@ -69,66 +71,72 @@ class AuthControllerTest {
     @Nested
     class AuthenticateUser {
 
-        private static final String TOKEN = "jwt-token";
-        private static final long EXPIRATION = 3_600_000L;
+        private final LoginResponse session = new LoginResponse("jwt-token", 3_600_000L, "refresh-token", 2_592_000_000L);
 
         @Test
-        void returnsOkWithTokenAndExpiration() {
+        void returnsOkWithSessionTokens() {
             when(authService.authenticate(loginDto)).thenReturn(user);
-            when(jwtService.generateToken(user)).thenReturn(TOKEN);
-            when(jwtService.getExpirationTime()).thenReturn(EXPIRATION);
+            when(sessionService.startSession(user)).thenReturn(session);
 
             ResponseEntity<?> response = controller.authenticateUser(loginDto);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody())
-                    .isInstanceOf(LoginResponse.class)
-                    .usingRecursiveComparison()
-                    .isEqualTo(new LoginResponse(TOKEN, EXPIRATION));
+            assertThat(response.getBody()).isSameAs(session);
         }
 
         @Test
-        void generatesTokenForAuthenticatedUser() {
+        void authenticatesBeforeStartingSession() {
             when(authService.authenticate(loginDto)).thenReturn(user);
-            when(jwtService.generateToken(user)).thenReturn(TOKEN);
+            when(sessionService.startSession(user)).thenReturn(session);
 
             controller.authenticateUser(loginDto);
 
-            verify(jwtService).generateToken(same(user));
-        }
-
-        @Test
-        void authenticatesBeforeGeneratingToken() {
-            when(authService.authenticate(loginDto)).thenReturn(user);
-            when(jwtService.generateToken(user)).thenReturn(TOKEN);
-
-            controller.authenticateUser(loginDto);
-
-            InOrder inOrder = inOrder(authService, jwtService);
+            InOrder inOrder = inOrder(authService, sessionService);
             inOrder.verify(authService).authenticate(loginDto);
-            inOrder.verify(jwtService).generateToken(user);
+            inOrder.verify(sessionService).startSession(same(user));
         }
 
         @Test
-        void throwsBadCredentialsException_andSkipsTokenGeneration_whenCredentialsAreBad() {
+        void throwsBadCredentialsException_andSkipsSession_whenCredentialsAreBad() {
             when(authService.authenticate(loginDto))
                     .thenThrow(new BadCredentialsException("Bad credentials"));
 
             assertThatThrownBy(() -> controller.authenticateUser(loginDto))
                     .isInstanceOf(BadCredentialsException.class);
 
-            verifyNoInteractions(jwtService);
+            verifyNoInteractions(sessionService);
+        }
+    }
+
+    @Nested
+    class Refresh {
+
+        @Test
+        void returnsNewSessionFromService() {
+            LoginResponse session = new LoginResponse("new-jwt", 1L, "new-refresh", 2L);
+            when(sessionService.refresh("old-refresh")).thenReturn(session);
+
+            assertThat(controller.refresh(new RefreshTokenRequest("old-refresh"))).isSameAs(session);
         }
 
         @Test
-        void throwsIllegalStateException_whenJwtServiceFails() {
-            when(authService.authenticate(loginDto)).thenReturn(user);
-            when(jwtService.generateToken(user))
-                    .thenThrow(new IllegalStateException("Signing key missing"));
+        void propagatesInvalidRefreshToken() {
+            when(sessionService.refresh("bad")).thenThrow(new InvalidRefreshTokenException());
 
-            assertThatThrownBy(() -> controller.authenticateUser(loginDto))
-                    .isInstanceOf(IllegalStateException.class);
+            assertThatThrownBy(() -> controller.refresh(new RefreshTokenRequest("bad")))
+                    .isInstanceOf(InvalidRefreshTokenException.class);
         }
+    }
 
+    @Nested
+    class Logout {
+
+        @Test
+        void endsSessionAndReturnsNoContent() {
+            ResponseEntity<Void> response = controller.logout(new RefreshTokenRequest("refresh"));
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            verify(sessionService).endSession("refresh");
+        }
     }
 }

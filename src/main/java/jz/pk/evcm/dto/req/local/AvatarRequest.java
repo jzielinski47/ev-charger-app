@@ -1,7 +1,9 @@
 package jz.pk.evcm.dto.req.local;
 
-import jakarta.validation.constraints.NotNull;
-import jz.pk.evcm.entity.UserAvatar;
+import jakarta.validation.constraints.Pattern;
 
-/** Body of PUT /api/users/me/avatar. Values outside UserAvatar are rejected with 400. */
-public record AvatarRequest(@NotNull UserAvatar avatar) {}
+public record AvatarRequest(
+        @Pattern(regexp = "^[A-Za-z0-9_-]{1,64}$",
+                message = "Seed must be 1-64 characters: letters, digits, '-' or '_'")
+        String seed
+) {}

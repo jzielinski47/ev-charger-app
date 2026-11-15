@@ -1,0 +1,13 @@
+$kind: http-request
+name: Get Current User
+method: GET
+url: "{{baseUrl}}/api/users/me"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("returns the logged-in user", () => {
+          pm.response.to.have.status(200);
+          pm.expect(pm.response.json().email).to.equal("john.doe@example.com");
+      });
+    language: text/javascript
+order: 1000
