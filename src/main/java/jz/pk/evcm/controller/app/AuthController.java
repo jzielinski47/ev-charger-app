@@ -2,12 +2,13 @@ package jz.pk.evcm.controller.app;
 
 import jakarta.validation.Valid;
 import jz.pk.evcm.dto.req.local.LoginUserDto;
+import jz.pk.evcm.dto.req.local.RefreshTokenRequest;
 import jz.pk.evcm.dto.req.local.SignupUserDto;
 import jz.pk.evcm.dto.res.LoginResponse;
 import jz.pk.evcm.dto.res.UserResponse;
 import jz.pk.evcm.entity.User;
-import jz.pk.evcm.security.JwtService;
 import jz.pk.evcm.service.AuthService;
+import jz.pk.evcm.service.SessionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,12 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final JwtService jwtService;
     private final AuthService authenticationService;
+    private final SessionService sessionService;
 
-    public AuthController(JwtService jwtService, AuthService authenticationService) {
-        this.jwtService = jwtService;
+    public AuthController(AuthService authenticationService, SessionService sessionService) {
         this.authenticationService = authenticationService;
+        this.sessionService = sessionService;
     }
 
     @PostMapping("/signup")
@@ -35,11 +36,13 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginUserDto loginUserDto) {
         User authenticatedUser = authenticationService.authenticate(loginUserDto);
-        String jwtToken = jwtService.generateToken(authenticatedUser);
-        LoginResponse loginResponse = new LoginResponse(jwtToken, jwtService.getExpirationTime());
+        LoginResponse loginResponse = sessionService.startSession(authenticatedUser);
 
         return ResponseEntity.ok(loginResponse);
     }
 
-
+    @PostMapping("/refresh")
+    public LoginResponse refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return sessionService.refresh(request.refreshToken());
+    }
 }
