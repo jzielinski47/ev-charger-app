@@ -36,6 +36,10 @@ class ChargerPointSearchRepositoryImpl implements ChargerPointSearchRepository {
               AND ST_DistanceSphere(a.location, %1$s) <= :distanceMeters
             """.formatted(REFERENCE_POINT);
 
+    private static final String IN_BOUNDS = """
+              AND a.location && ST_MakeEnvelope(:west, :south, :east, :north, 4326)
+            """;
+
     private static final String ORDER_AND_PAGE = """
             ORDER BY CASE WHEN :sort = 'POWER' THEN m.max_power END DESC NULLS LAST,
                      CASE WHEN :sort = 'POINTS' THEN cp.number_of_points END DESC NULLS LAST,
@@ -54,6 +58,17 @@ class ChargerPointSearchRepositoryImpl implements ChargerPointSearchRepository {
                 .setParameter("distanceDeg", kmToDegrees(distanceInKm, latitude))
                 .setParameter("distanceMeters", distanceInKm * 1000);
         return run(query, latitude, longitude, criteria);
+    }
+
+    @Override
+    public List<ChargerSearchHit> searchInBounds(double north, double south, double east, double west,
+                                                 ChargerSearchCriteria criteria) {
+        Query query = entityManager.createNativeQuery(SELECT + IN_BOUNDS + ORDER_AND_PAGE)
+                .setParameter("north", north)
+                .setParameter("south", south)
+                .setParameter("east", east)
+                .setParameter("west", west);
+        return run(query, (north + south) / 2, (east + west) / 2, criteria);
     }
 
     @SuppressWarnings("unchecked")

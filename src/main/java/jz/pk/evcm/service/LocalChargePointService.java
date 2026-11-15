@@ -51,6 +51,29 @@ public class LocalChargePointService {
         if (!(distanceInKm > 0)) {
             throw new InvalidSearchArgumentException("proximity must be greater than 0");
         }
+        return search(vehicleId, ownerEmail, options,
+                criteria -> chargerPointRepository.searchInRadius(latitude, longitude, distanceInKm, criteria));
+    }
+
+    public List<ChargerPointResponse> getAllChargersInBounds(double north, double south, double east, double west,
+                                                             Long vehicleId, String ownerEmail,
+                                                             ChargerSearchOptions options) {
+        validateLatitude("north", north);
+        validateLatitude("south", south);
+        validateLongitude("east", east);
+        validateLongitude("west", west);
+        if (south > north) {
+            throw new InvalidSearchArgumentException("south must not be greater than north");
+        }
+        if (west > east) {
+            throw new InvalidSearchArgumentException("west must not be greater than east");
+        }
+        return search(vehicleId, ownerEmail, options,
+                criteria -> chargerPointRepository.searchInBounds(north, south, east, west, criteria));
+    }
+
+    private List<ChargerPointResponse> search(Long vehicleId, String ownerEmail, ChargerSearchOptions options,
+                                              Function<ChargerSearchCriteria, List<ChargerSearchHit>> query) {
         validatePaging(options);
         Set<ConnectorType> connectorTypes = null;
         if (vehicleId != null) {
@@ -65,7 +88,7 @@ public class LocalChargePointService {
         ChargerSearchCriteria criteria = new ChargerSearchCriteria(connectorTypes, currentTypes,
                 filter.isOperationalOnly(), options.effectiveSort(), options.effectiveLimit(), options.effectiveOffset());
 
-        return load(chargerPointRepository.searchInRadius(latitude, longitude, distanceInKm, criteria));
+        return load(query.apply(criteria));
     }
 
     private static void validateLatitude(String name, double value) {

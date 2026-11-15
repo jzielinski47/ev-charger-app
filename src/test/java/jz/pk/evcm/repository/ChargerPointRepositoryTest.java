@@ -292,6 +292,39 @@ class ChargerPointRepositoryTest {
     }
 
     @Nested
+    class SearchInBoundsTests {
+
+        private List<ChargerSearchHit> searchBox(double north, double south, double east, double west) {
+            entityManager.flush();
+            entityManager.clear();
+            return repository.searchInBounds(north, south, east, west, anyCharger(10));
+        }
+
+        @Test
+        void returnsChargersInsideTheBox_orderedByDistanceFromItsCentre() {
+            ChargerPoint corner = createChargerAt(0.09, 0.09);
+            ChargerPoint centre = createChargerAt(0.0, 0.0);
+            ChargerPoint edge = createChargerAt(0.0, -0.05);
+            createChargerAt(0.11, 0.0);
+            createChargerAt(0.0, 0.2);
+
+            List<ChargerSearchHit> hits = searchBox(0.1, -0.1, 0.1, -0.1);
+
+            assertThat(hits).extracting(ChargerSearchHit::id).containsExactlyElementsOf(ids(centre, edge, corner));
+            assertThat(hits.getFirst().distanceMeters()).isLessThan(1.0);
+        }
+
+        @Test
+        void measuresDistanceFromTheCentreOfAnOffsetBox() {
+            createChargerAt(1.0, 1.0);
+
+            assertThat(searchBox(1.2, 0.8, 1.2, 0.8)).singleElement()
+                    .extracting(ChargerSearchHit::distanceMeters)
+                    .satisfies(meters -> assertThat(meters).isLessThan(1.0));
+        }
+    }
+
+    @Nested
     class SpatialIndexTests {
 
         @Test

@@ -73,4 +73,26 @@ class LocalChargePointServiceSpatialTest {
         assertThatThrownBy(() -> service.getAllChargersInProximity(0.0, 0.0, 0.0, null, null, ChargerSearchOptions.DEFAULTS))
                 .hasMessage("proximity must be greater than 0");
     }
+
+    @Test
+    void findsChargersInBounds() {
+        persistChargerAt(1L, 19.95, 50.06);
+        persistChargerAt(2L, 20.5, 50.06);
+
+        List<ChargerPointResponse> results = service.getAllChargersInBounds(50.1, 50.0, 20.0, 19.9,
+                null, null, ChargerSearchOptions.DEFAULTS);
+
+        assertThat(results).extracting(ChargerPointResponse::id).containsExactly(1L);
+    }
+
+    @Test
+    void rejectsInvertedOrAntimeridianCrossingBounds() {
+        assertThatThrownBy(() -> service.getAllChargersInBounds(50.0, 50.1, 20.0, 19.9, null, null, ChargerSearchOptions.DEFAULTS))
+                .isInstanceOf(InvalidSearchArgumentException.class)
+                .hasMessage("south must not be greater than north");
+        assertThatThrownBy(() -> service.getAllChargersInBounds(10.0, -10.0, -170.0, 170.0, null, null, ChargerSearchOptions.DEFAULTS))
+                .hasMessage("west must not be greater than east");
+        assertThatThrownBy(() -> service.getAllChargersInBounds(95.0, 0.0, 10.0, 0.0, null, null, ChargerSearchOptions.DEFAULTS))
+                .hasMessage("north must be between -90 and 90");
+    }
 }

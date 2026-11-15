@@ -36,4 +36,16 @@ public class ChargePointController {
                 new ChargerSearchOptions(filter, sort, limit, offset));
     }
 
+    @QueryMapping
+    public List<ChargerPointResponse> allChargerPointsInBounds(@Argument Double north, @Argument Double south,
+                                                               @Argument Double east, @Argument Double west,
+                                                               @Argument Long vehicleId,
+                                                               @Argument ChargerFilter filter, @Argument ChargerSort sort,
+                                                               @Argument Integer limit, @Argument Integer offset,
+                                                               @AuthenticationPrincipal UserDetails principal) {
+        String ownerEmail = principal != null ? principal.getUsername() : null;
+        return chargePointService.getAllChargersInBounds(north, south, east, west, vehicleId, ownerEmail,
+                new ChargerSearchOptions(filter, sort, limit, offset));
+    }
+
 }

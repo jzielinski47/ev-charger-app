@@ -227,6 +227,36 @@ class ChargePointGraphQlTest {
     }
 
     @Test
+    void boundsQuery_withVehicle_returnsCompatibleChargersInTheBox() {
+        User owner = saveUser("bounds-owner@test.dev");
+        long vehicleId = saveVehicle(owner, VehicleInlet.CCS2);
+        long ccs2Inside = saveChargerNearKrakow(0.01, CCS2);
+        saveChargerNearKrakow(0.02, CHADEMO);
+        saveChargerNearKrakow(0.5, CCS2);
+
+        authenticatedAs(owner).document("""
+                        query($vehicleId: ID) {
+                          allChargerPointsInBounds(north: 50.1, south: 50.0, east: 20.0, west: 19.9, vehicleId: $vehicleId) {
+                            id
+                            distanceKm
+                          }
+                        }
+                        """)
+                .variable("vehicleId", vehicleId)
+                .execute()
+                .path("allChargerPointsInBounds[*].id").entityList(Long.class)
+                .containsExactly(ccs2Inside);
+    }
+
+    @Test
+    void boundsQuery_crossingTheAntimeridian_isBadRequest() {
+        assertSingleError(graphQlTester.document("""
+                        { allChargerPointsInBounds(north: 10, south: -10, east: -170, west: 170) { id } }
+                        """).execute(),
+                ErrorType.BAD_REQUEST, "west must not be greater than east");
+    }
+
+    @Test
     void limitAboveMaximum_isBadRequest() {
         assertSingleError(queryPage(null, 501, null), ErrorType.BAD_REQUEST, "limit must be between 1 and 500");
         assertSingleError(queryPage(null, null, -1), ErrorType.BAD_REQUEST, "offset must not be negative");
